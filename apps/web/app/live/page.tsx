@@ -1,4 +1,5 @@
 import { createPublicSupabaseClient } from "@/lib/supabase/publicClient";
+import { SnookerTablePreview } from "@/components/SnookerTablePreview";
 import type { LiveMatchRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,9 @@ export default async function LiveMatchPage() {
               <p>Current break: {live.current_break_player2}</p>
               <p>Highest break: {live.highest_break_player2}</p>
             </article>
+          </div>
+          <div className="panel-body" style={{ paddingTop: 0 }}>
+            <SnookerTablePreview live={live} />
           </div>
           <div className="panel-body" style={{ paddingTop: 0 }}>
             <dl className="kv">

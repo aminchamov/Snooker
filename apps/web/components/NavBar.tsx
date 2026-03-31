@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 const links = [
   { href: "/players", label: "Players" },
@@ -12,8 +12,11 @@ export function NavBar() {
     <header className="site-header">
       <div className="site-shell site-header-inner">
         <Link className="brand" href="/players">
-          <span className="brand-dot" />
-          El Ocho
+          <img src="/elocho_logo.png" alt="El Ocho logo" className="brand-logo" />
+          <span className="brand-text-wrap">
+            <span className="brand-text-main">EL OCHO</span>
+            <span className="brand-text-sub">SNOOKER LOUNGE</span>
+          </span>
         </Link>
         <nav className="site-nav" aria-label="Main">
           {links.map((link) => (

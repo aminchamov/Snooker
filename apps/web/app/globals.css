@@ -1,14 +1,19 @@
-﻿:root {
-  --bg-0: #0a121a;
-  --bg-1: #152331;
-  --card: #ffffff;
-  --card-soft: #f4f7fb;
-  --ink: #0f1d2b;
-  --ink-soft: #415468;
-  --accent: #125fa3;
-  --accent-2: #0ca678;
-  --danger: #c92a2a;
-  --line: #d8e1ec;
+:root {
+  --bg-0: #220c12;
+  --bg-1: #3e0f1b;
+  --bg-2: #12070b;
+  --surface: #1f1418;
+  --surface-soft: #281b20;
+  --surface-strong: #120b0f;
+  --line: #5a323d;
+  --ink: #f7efef;
+  --ink-soft: #cfbbc1;
+  --gold: #c8a65a;
+  --gold-soft: #e7d4a0;
+  --burgundy: #791b2f;
+  --burgundy-2: #5e1526;
+  --danger: #d64545;
+  --success: #2da06a;
 }
 
 * {
@@ -23,9 +28,11 @@ body {
   font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(circle at 10% 20%, #1d3044 0%, transparent 45%),
-    radial-gradient(circle at 90% 10%, #12383f 0%, transparent 40%),
-    linear-gradient(135deg, var(--bg-0), var(--bg-1));
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 8px, transparent 8px 22px),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.24)),
+    radial-gradient(circle at 6% 3%, #632132 0%, transparent 30%),
+    radial-gradient(circle at 94% 2%, #2a5a3f 0%, transparent 25%),
+    linear-gradient(145deg, var(--bg-0), var(--bg-1) 55%, var(--bg-2));
 }
 
 a {
@@ -47,32 +54,51 @@ a {
   top: 0;
   z-index: 30;
   backdrop-filter: blur(8px);
-  background: color-mix(in oklab, #0d1824 82%, transparent);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: color-mix(in oklab, #1a0d12 78%, transparent);
+  border-bottom: 1px solid rgba(200, 166, 90, 0.28);
 }
 
 .site-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 64px;
+  min-height: 70px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.03em;
 }
 
-.brand-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ffd43b, #ff922b);
-  box-shadow: 0 0 0 3px rgba(255, 212, 59, 0.25);
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(200, 166, 90, 0.5);
+  box-shadow: 0 0 0 3px rgba(200, 166, 90, 0.12);
+}
+
+.brand-text-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.06;
+}
+
+.brand-text-main {
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--gold-soft);
+  font-size: 0.93rem;
+}
+
+.brand-text-sub {
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  color: #fff;
+  opacity: 0.84;
 }
 
 .site-nav {
@@ -83,25 +109,31 @@ a {
 }
 
 .site-nav-link {
-  color: #e6eff8;
+  color: #f3dee5;
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   font-size: 0.92rem;
+  border: 1px solid transparent;
 }
 
 .site-nav-link:hover {
-  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(200, 166, 90, 0.32);
+  background: rgba(121, 27, 47, 0.35);
 }
 
 .panel {
-  background: var(--card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent), var(--surface);
   border: 1px solid var(--line);
   border-radius: 16px;
-  box-shadow: 0 10px 35px rgba(4, 14, 27, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
 }
 
 .panel-header {
   padding: 1rem 1rem 0.6rem;
+}
+
+.panel-header h2 {
+  color: var(--gold-soft);
 }
 
 .panel-body {
@@ -110,13 +142,14 @@ a {
 
 .page-title {
   margin: 0;
-  color: #f8fbff;
-  font-size: clamp(1.3rem, 1.6vw, 2rem);
+  color: #fff5f8;
+  font-size: clamp(1.35rem, 1.8vw, 2.1rem);
+  letter-spacing: 0.03em;
 }
 
 .page-subtitle {
   margin-top: 0.35rem;
-  color: #cfdeed;
+  color: #ebd6dd;
   font-size: 0.95rem;
 }
 
@@ -140,16 +173,20 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid var(--line);
-  padding: 0.6rem;
+  border-bottom: 1px solid rgba(200, 166, 90, 0.18);
+  padding: 0.64rem;
   text-align: left;
   font-size: 0.92rem;
 }
 
 th {
-  color: var(--ink-soft);
-  font-weight: 600;
-  background: var(--card-soft);
+  color: var(--gold-soft);
+  font-weight: 700;
+  background: rgba(121, 27, 47, 0.28);
+}
+
+tbody tr:hover {
+  background: rgba(200, 166, 90, 0.06);
 }
 
 .badge {
@@ -158,18 +195,20 @@ th {
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
   font-size: 0.76rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.02em;
 }
 
 .badge-live {
-  background: #ffe3e3;
-  color: #8c1d1d;
+  background: rgba(214, 69, 69, 0.2);
+  color: #ffc4c4;
+  border: 1px solid rgba(214, 69, 69, 0.4);
 }
 
 .badge-ok {
-  background: #d3f9d8;
-  color: #24542d;
+  background: rgba(45, 160, 106, 0.2);
+  color: #b8f3d6;
+  border: 1px solid rgba(45, 160, 106, 0.4);
 }
 
 .button,
@@ -180,20 +219,24 @@ textarea {
 }
 
 .button {
-  border: 0;
+  border: 1px solid rgba(200, 166, 90, 0.2);
   border-radius: 10px;
-  padding: 0.55rem 0.85rem;
-  background: var(--accent);
+  padding: 0.56rem 0.88rem;
+  background: linear-gradient(180deg, #8a2740, #61192a);
   color: #fff;
   cursor: pointer;
 }
 
+.button:hover {
+  filter: brightness(1.08);
+}
+
 .button.secondary {
-  background: #7a8da3;
+  background: linear-gradient(180deg, #5f6575, #4a5161);
 }
 
 .button.danger {
-  background: var(--danger);
+  background: linear-gradient(180deg, #cb4646, #a12626);
 }
 
 .form-row {
@@ -203,7 +246,9 @@ textarea {
 }
 
 .input {
-  border: 1px solid #c7d4e3;
+  border: 1px solid #85505d;
+  background: #120b0f;
+  color: #f6edf0;
   border-radius: 10px;
   padding: 0.52rem 0.62rem;
   width: 100%;
@@ -216,20 +261,47 @@ textarea {
 }
 
 .kv dt {
-  color: var(--ink-soft);
-  font-weight: 600;
+  color: var(--gold-soft);
+  font-weight: 700;
 }
 
 .kv dd {
   margin: 0;
+  color: #f5ebee;
 }
 
 .empty {
-  color: #e5eff8;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px dashed rgba(255, 255, 255, 0.4);
+  color: #f3e4e8;
+  background: rgba(18, 11, 15, 0.74);
+  border: 1px dashed rgba(200, 166, 90, 0.38);
   border-radius: 14px;
   padding: 1rem;
+}
+
+.snooker-table-shell {
+  background: rgba(18, 11, 15, 0.45);
+  border: 1px solid rgba(200, 166, 90, 0.28);
+  border-radius: 14px;
+  padding: 0.85rem;
+}
+
+.snooker-table-title {
+  margin: 0 0 0.55rem;
+  color: var(--gold-soft);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.snooker-table {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.snooker-table-meta {
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.85rem;
 }
 
 @media (max-width: 860px) {
