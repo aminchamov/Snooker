@@ -21,18 +21,117 @@ function nowMs(): number {
   return Date.now();
 }
 
+const SUPPORTED_PLAYER_COUNTS = [2, 4, 8, 16, 32] as const;
+
+function normalizePlayerCount(value: number): (typeof SUPPORTED_PLAYER_COUNTS)[number] {
+  return SUPPORTED_PLAYER_COUNTS.includes(value as (typeof SUPPORTED_PLAYER_COUNTS)[number])
+    ? (value as (typeof SUPPORTED_PLAYER_COUNTS)[number])
+    : 2;
+}
+
+function computeTotalRounds(playerCount: number): number {
+  return Math.ceil(Math.log2(playerCount));
+}
+
+function resizeSlots(slots: Array<number | null>, playerCount: number): Array<number | null> {
+  return Array.from({ length: playerCount }, (_, index) => slots[index] ?? null);
+}
+
+type TournamentMatchInsert = {
+  id: number;
+  tournament_id: number;
+  round_number: number;
+  bracket_position: number;
+  player1_id: number | null;
+  player2_id: number | null;
+  winner_player_id: number | null;
+  linked_match_id: number | null;
+  state: string;
+  source_created_at_ms: number;
+  source_updated_at_ms: number;
+  deleted_at: null;
+};
+
+function buildTournamentMatchesPayload(
+  tournamentId: number,
+  playerCount: number,
+  firstRoundSlots: Array<number | null>,
+  timestampMs: number
+): TournamentMatchInsert[] {
+  const rows: TournamentMatchInsert[] = [];
+  const totalRounds = computeTotalRounds(playerCount);
+  let idCursor = timestampMs * 1000;
+
+  const firstRoundMatchCount = playerCount / 2;
+  for (let i = 0; i < firstRoundMatchCount; i++) {
+    const player1Id = firstRoundSlots[i * 2] ?? null;
+    const player2Id = firstRoundSlots[i * 2 + 1] ?? null;
+    rows.push({
+      id: idCursor++,
+      tournament_id: tournamentId,
+      round_number: 1,
+      bracket_position: i,
+      player1_id: player1Id,
+      player2_id: player2Id,
+      winner_player_id: null,
+      linked_match_id: null,
+      state: player1Id !== null && player2Id !== null ? "ready" : "pending",
+      source_created_at_ms: timestampMs,
+      source_updated_at_ms: timestampMs,
+      deleted_at: null
+    });
+  }
+
+  for (let round = 2; round <= totalRounds; round++) {
+    const matchCount = Math.floor(playerCount / 2 ** round);
+    for (let position = 0; position < matchCount; position++) {
+      rows.push({
+        id: idCursor++,
+        tournament_id: tournamentId,
+        round_number: round,
+        bracket_position: position,
+        player1_id: null,
+        player2_id: null,
+        winner_player_id: null,
+        linked_match_id: null,
+        state: "pending",
+        source_created_at_ms: timestampMs,
+        source_updated_at_ms: timestampMs,
+        deleted_at: null
+      });
+    }
+  }
+
+  return rows;
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
 
   const [session, setSession] = useState<AdminSession | null>(null);
   const [players, setPlayers] = useState<PlayerRow[]>([]);
   const [tournaments, setTournaments] = useState<TournamentRow[]>([]);
+  const [tournamentMatches, setTournamentMatches] = useState<TournamentMatchRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
 
   const [playerForm, setPlayerForm] = useState({ id: "", name: "", image_uri: "" });
-  const [tournamentForm, setTournamentForm] = useState({ id: "", name: "", player_count: "2", total_rounds: "1", status: "created" });
+  const [tournamentForm, setTournamentForm] = useState({ id: "", name: "", player_count: "2", total_rounds: "1", status: "in_progress" });
+  const [firstRoundSlots, setFirstRoundSlots] = useState<Array<number | null>>(resizeSlots([], 2));
+
+  const availableTournamentPlayers = useMemo(
+    () => players.filter((player) => !player.archived),
+    [players]
+  );
+  const selectedPlayerCount = useMemo(
+    () => normalizePlayerCount(Number(tournamentForm.player_count)),
+    [tournamentForm.player_count]
+  );
+  const filledSlots = useMemo(
+    () => firstRoundSlots.filter((id): id is number => id !== null).length,
+    [firstRoundSlots]
+  );
 
   async function ensureAdmin() {
     const auth = await browserSupabase.auth.getUser();
@@ -76,9 +175,15 @@ export default function AdminDashboardPage() {
 
     setSession(admin);
 
-    const [playersRes, tournamentsRes] = await Promise.all([
+    const [playersRes, tournamentsRes, tournamentMatchesRes] = await Promise.all([
       browserSupabase.from("players").select("*").order("name", { ascending: true }),
-      browserSupabase.from("tournaments").select("*").order("source_created_at_ms", { ascending: false })
+      browserSupabase.from("tournaments").select("*").order("source_created_at_ms", { ascending: false }),
+      browserSupabase
+        .from("tournament_matches")
+        .select("*")
+        .order("tournament_id", { ascending: true })
+        .order("round_number", { ascending: true })
+        .order("bracket_position", { ascending: true })
     ]);
 
     if (playersRes.error) {
@@ -93,12 +198,49 @@ export default function AdminDashboardPage() {
       setTournaments((tournamentsRes.data ?? []) as TournamentRow[]);
     }
 
+    if (tournamentMatchesRes.error) {
+      setStatusError(tournamentMatchesRes.error.message);
+    } else {
+      setTournamentMatches((tournamentMatchesRes.data ?? []) as TournamentMatchRow[]);
+    }
+
     setIsLoading(false);
   }
 
   useEffect(() => {
     void loadAdminData();
   }, []);
+
+  function updateTournamentPlayerCount(rawCount: number) {
+    const count = normalizePlayerCount(rawCount);
+    setTournamentForm((state) => ({
+      ...state,
+      player_count: String(count),
+      total_rounds: String(computeTotalRounds(count))
+    }));
+    setFirstRoundSlots((previous) => resizeSlots(previous, count));
+  }
+
+  function assignPlayerToSlot(slotIndex: number, rawValue: string) {
+    const parsed = Number(rawValue);
+    const playerId = Number.isNaN(parsed) || parsed <= 0 ? null : parsed;
+
+    setFirstRoundSlots((previous) => {
+      const next = [...previous];
+      if (slotIndex < 0 || slotIndex >= next.length) return previous;
+
+      if (playerId !== null) {
+        for (let i = 0; i < next.length; i++) {
+          if (i !== slotIndex && next[i] === playerId) {
+            next[i] = null;
+          }
+        }
+      }
+
+      next[slotIndex] = playerId;
+      return next;
+    });
+  }
 
   async function savePlayer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -137,19 +279,44 @@ export default function AdminDashboardPage() {
   async function saveTournament(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusError(null);
+    setStatusMessage(null);
+
+    const normalizedName = tournamentForm.name.trim();
+    if (!normalizedName) {
+      setStatusError("Tournament name is required.");
+      return;
+    }
+
+    if (availableTournamentPlayers.length < selectedPlayerCount) {
+      setStatusError(`Need at least ${selectedPlayerCount} active players to build this bracket.`);
+      return;
+    }
+
+    if (filledSlots !== selectedPlayerCount) {
+      setStatusError("Please fill all round-1 player slots.");
+      return;
+    }
+
+    const selectedIds = firstRoundSlots.filter((id): id is number => id !== null);
+    if (new Set(selectedIds).size !== selectedIds.length) {
+      setStatusError("Each player can only be used once in round 1.");
+      return;
+    }
 
     const parsedId = Number(tournamentForm.id);
     const effectiveId = Number.isNaN(parsedId) || parsedId <= 0 ? nowMs() : parsedId;
+    const timestamp = nowMs();
+    const totalRounds = computeTotalRounds(selectedPlayerCount);
 
     const payload = {
       id: effectiveId,
-      name: tournamentForm.name.trim(),
+      name: normalizedName,
       status: tournamentForm.status,
       champion_player_id: null,
-      total_rounds: Number(tournamentForm.total_rounds) || 1,
-      player_count: Number(tournamentForm.player_count) || 2,
-      source_created_at_ms: nowMs(),
-      source_updated_at_ms: nowMs(),
+      total_rounds: totalRounds,
+      player_count: selectedPlayerCount,
+      source_created_at_ms: timestamp,
+      source_updated_at_ms: timestamp,
       deleted_at: null
     };
 
@@ -159,8 +326,24 @@ export default function AdminDashboardPage() {
       return;
     }
 
-    setStatusMessage("Tournament saved.");
-    setTournamentForm({ id: "", name: "", player_count: "2", total_rounds: "1", status: "created" });
+    const existingRows = tournamentMatches.filter((row) => row.tournament_id === effectiveId);
+    if (existingRows.length === 0) {
+      const bracketRows = buildTournamentMatchesPayload(effectiveId, selectedPlayerCount, firstRoundSlots, timestamp);
+      const matchesRes = await browserSupabase
+        .from("tournament_matches")
+        .upsert(bracketRows, { onConflict: "id" });
+
+      if (matchesRes.error) {
+        setStatusError(matchesRes.error.message);
+        return;
+      }
+      setStatusMessage("Tournament and bracket created.");
+    } else {
+      setStatusMessage("Tournament saved. Existing bracket kept unchanged.");
+    }
+
+    setTournamentForm({ id: "", name: "", player_count: "2", total_rounds: "1", status: "in_progress" });
+    setFirstRoundSlots(resizeSlots([], 2));
     await loadAdminData();
   }
 
@@ -169,13 +352,26 @@ export default function AdminDashboardPage() {
   }
 
   function editTournament(row: TournamentRow) {
+    const count = normalizePlayerCount(row.player_count);
+    const slots = resizeSlots([], count);
+    const roundOneRows = tournamentMatches
+      .filter((match) => match.tournament_id === row.id && match.round_number === 1)
+      .sort((a, b) => a.bracket_position - b.bracket_position);
+
+    for (const match of roundOneRows) {
+      const slotBase = match.bracket_position * 2;
+      if (slotBase < slots.length) slots[slotBase] = match.player1_id ?? null;
+      if (slotBase + 1 < slots.length) slots[slotBase + 1] = match.player2_id ?? null;
+    }
+
     setTournamentForm({
       id: String(row.id),
       name: row.name,
-      player_count: String(row.player_count),
-      total_rounds: String(row.total_rounds),
+      player_count: String(count),
+      total_rounds: String(row.total_rounds || computeTotalRounds(count)),
       status: row.status
     });
+    setFirstRoundSlots(slots);
   }
 
   async function exportAll() {
@@ -319,27 +515,111 @@ export default function AdminDashboardPage() {
                 <label>Name</label>
                 <input className="input" value={tournamentForm.name} onChange={(e) => setTournamentForm((s) => ({ ...s, name: e.target.value }))} required />
               </div>
-              <div className="form-row">
-                <label>Player Count</label>
-                <input className="input" value={tournamentForm.player_count} onChange={(e) => setTournamentForm((s) => ({ ...s, player_count: e.target.value }))} />
-              </div>
-              <div className="form-row">
-                <label>Total Rounds</label>
-                <input className="input" value={tournamentForm.total_rounds} onChange={(e) => setTournamentForm((s) => ({ ...s, total_rounds: e.target.value }))} />
-              </div>
-              <div className="form-row">
-                <label>Status</label>
-                <select className="input" value={tournamentForm.status} onChange={(e) => setTournamentForm((s) => ({ ...s, status: e.target.value }))}>
-                  <option value="created">created</option>
+                <div className="form-row">
+                  <label>Player Count</label>
+                  <select
+                    className="input"
+                    value={String(selectedPlayerCount)}
+                    onChange={(e) => updateTournamentPlayerCount(Number(e.target.value))}
+                  >
+                    {SUPPORTED_PLAYER_COUNTS.map((count) => (
+                      <option key={count} value={count}>
+                        {count}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-row">
+                  <label>Total Rounds</label>
+                  <input className="input" value={String(computeTotalRounds(selectedPlayerCount))} readOnly />
+                </div>
+                <div className="form-row">
+                  <label>Status</label>
+                  <select className="input" value={tournamentForm.status} onChange={(e) => setTournamentForm((s) => ({ ...s, status: e.target.value }))}>
+                    <option value="created">created</option>
                   <option value="in_progress">in_progress</option>
-                  <option value="completed">completed</option>
-                </select>
-              </div>
-              <button className="button" type="submit">Save Tournament</button>
-            </form>
-          </div>
-        </article>
-      </section>
+                    <option value="completed">completed</option>
+                  </select>
+                </div>
+                <div className="form-row">
+                  <label>Round 1 Matchups</label>
+                  {availableTournamentPlayers.length < selectedPlayerCount ? (
+                    <div className="empty" style={{ padding: "0.6rem 0.75rem" }}>
+                      Need {selectedPlayerCount} active players, but only {availableTournamentPlayers.length} available.
+                    </div>
+                  ) : null}
+                  <div className="grid" style={{ gap: "0.6rem" }}>
+                    {Array.from({ length: selectedPlayerCount / 2 }).map((_, matchIndex) => {
+                      const slot1 = matchIndex * 2;
+                      const slot2 = slot1 + 1;
+
+                      const slot1UsedByOthers = new Set(
+                        firstRoundSlots.filter((id, index): id is number => index !== slot1 && id !== null)
+                      );
+                      const slot2UsedByOthers = new Set(
+                        firstRoundSlots.filter((id, index): id is number => index !== slot2 && id !== null)
+                      );
+
+                      return (
+                        <div key={`pair-${matchIndex}`} className="panel" style={{ padding: "0.7rem" }}>
+                          <p style={{ margin: "0 0 0.55rem", color: "var(--gold-soft)", fontWeight: 700 }}>
+                            Match {matchIndex + 1}
+                          </p>
+                          <div className="grid grid-2">
+                            <div className="form-row" style={{ marginBottom: 0 }}>
+                              <label>Player A</label>
+                              <select
+                                className="input"
+                                value={firstRoundSlots[slot1] ?? ""}
+                                onChange={(e) => assignPlayerToSlot(slot1, e.target.value)}
+                              >
+                                <option value="">Select player</option>
+                                {availableTournamentPlayers.map((player) => (
+                                  <option
+                                    key={`slot1-${matchIndex}-${player.id}`}
+                                    value={player.id}
+                                    disabled={slot1UsedByOthers.has(player.id)}
+                                  >
+                                    {player.name}
+                                    {slot1UsedByOthers.has(player.id) ? " (In use)" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="form-row" style={{ marginBottom: 0 }}>
+                              <label>Player B</label>
+                              <select
+                                className="input"
+                                value={firstRoundSlots[slot2] ?? ""}
+                                onChange={(e) => assignPlayerToSlot(slot2, e.target.value)}
+                              >
+                                <option value="">Select player</option>
+                                {availableTournamentPlayers.map((player) => (
+                                  <option
+                                    key={`slot2-${matchIndex}-${player.id}`}
+                                    value={player.id}
+                                    disabled={slot2UsedByOthers.has(player.id)}
+                                  >
+                                    {player.name}
+                                    {slot2UsedByOthers.has(player.id) ? " (In use)" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <small style={{ color: "var(--ink-soft)" }}>
+                    Filled slots: {filledSlots}/{selectedPlayerCount}. Players are unique across all round-1 slots.
+                  </small>
+                </div>
+                <button className="button" type="submit">Save Tournament</button>
+              </form>
+            </div>
+          </article>
+        </section>
 
       <section className="panel">
         <div className="panel-header">
