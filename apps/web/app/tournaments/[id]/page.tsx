@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createPublicSupabaseClient } from "@/lib/supabase/publicClient";
+import { TournamentBracketView } from "@/components/TournamentBracketView";
 import type { MatchRow, PlayerRow, TournamentMatchRow, TournamentRow } from "@/lib/types";
 
 type Props = {
@@ -64,35 +65,8 @@ export default async function TournamentDetailPage({ params }: Props) {
         <div className="panel-header">
           <h2 style={{ margin: 0 }}>Bracket</h2>
         </div>
-        <div className="panel-body table-wrap">
-          {tmRows.length === 0 ? (
-            <div className="empty">No bracket rows synced yet.</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Round</th>
-                  <th>Slot</th>
-                  <th>Player 1</th>
-                  <th>Player 2</th>
-                  <th>State</th>
-                  <th>Winner</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tmRows.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.round_number}</td>
-                    <td>{m.bracket_position + 1}</td>
-                    <td>{m.player1_id ? playerMap.get(m.player1_id) ?? `#${m.player1_id}` : "-"}</td>
-                    <td>{m.player2_id ? playerMap.get(m.player2_id) ?? `#${m.player2_id}` : "-"}</td>
-                    <td>{m.state}</td>
-                    <td>{m.winner_player_id ? playerMap.get(m.winner_player_id) ?? `#${m.winner_player_id}` : "-"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        <div className="panel-body">
+          <TournamentBracketView tournament={t} matches={tmRows} playerNameById={playerMap} />
         </div>
       </section>
 
