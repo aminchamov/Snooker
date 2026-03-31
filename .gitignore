@@ -1,0 +1,44 @@
+# Android / Gradle
+.gradle/
+.gradle-home/
+.gradle_temp/
+.android/
+.android-home/
+local.properties
+**/build/
+app/build/
+captures/
+
+# Generated SDK / local bundles
+gradle-8.7/
+gradle-8.7.zip
+checkpoints/
+
+# Logs / temp
+*.log
+error*.txt
+build_output.txt
+
+# IDE
+.idea/
+*.iml
+.claude/
+
+# Secrets / local signing
+*.keystore
+*.jks
+
+# Node / Next.js
+node_modules/
+apps/web/node_modules/
+apps/web/.next/
+
+# Env files
+.env
+.env.*
+!.env.example
+apps/web/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
