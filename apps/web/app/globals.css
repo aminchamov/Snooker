@@ -467,9 +467,16 @@ textarea {
   letter-spacing: 0.04em;
 }
 
+.snooker-table-wrap {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
 .snooker-table {
   width: 100%;
-  height: auto;
+  height: 100%;
   display: block;
 }
 
@@ -477,6 +484,141 @@ textarea {
   margin: 0.45rem 0 0;
   color: var(--ink-soft);
   font-size: 0.85rem;
+}
+
+/* Live match mobile-style layout */
+.live-scoreboard-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.live-player-card {
+  border: 1px solid rgba(200, 166, 90, 0.3);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18, 11, 15, 0.95), rgba(121, 27, 47, 0.65));
+  padding: 0.75rem 0.85rem;
+}
+
+.live-player-card.is-active {
+  border-color: rgba(200, 166, 90, 0.85);
+  box-shadow: 0 0 0 1px rgba(200, 166, 90, 0.35), 0 6px 18px rgba(0, 0, 0, 0.3);
+}
+
+.live-player-card h3 {
+  margin: 0;
+  color: var(--gold-soft);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.live-player-score {
+  margin: 0.1rem 0 0.25rem;
+  font-size: clamp(2rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #fef7f8;
+}
+
+.live-player-sub {
+  margin: 0.12rem 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.live-center-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: center;
+  min-width: 214px;
+}
+
+.live-timer-card {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-radius: 14px;
+  border: 1px solid rgba(200, 166, 90, 0.34);
+  background: rgba(18, 11, 15, 0.92);
+  padding: 0.52rem 0.72rem;
+}
+
+.live-timer-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.02rem;
+}
+
+.live-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.live-queue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(200, 166, 90, 0.36);
+  background: rgba(121, 27, 47, 0.38);
+  color: var(--gold-soft);
+  padding: 0.18rem 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.live-mini-card {
+  min-width: 175px;
+  border-radius: 14px;
+  border: 1px solid rgba(200, 166, 90, 0.28);
+  background: rgba(18, 11, 15, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.48rem 0.62rem;
+}
+
+.live-mini-card .label {
+  color: var(--gold);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.live-mini-card .value {
+  color: #fef7f8;
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.live-mini-card .sub {
+  color: var(--gold-soft);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.live-table-section {
+  padding-top: 0;
+}
+
+.live-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
 }
 
 /* ── Tournament Bracket ─────────────────────── */
@@ -803,6 +945,21 @@ textarea {
 
   .brand-logo {
     height: 38px;
+  }
+
+  .live-scoreboard-top {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .live-center-stack {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .live-timer-card,
+  .live-mini-card {
+    width: 100%;
   }
 }
 

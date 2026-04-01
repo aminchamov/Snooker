@@ -99,6 +99,9 @@ export type LiveMatchRow = {
   tournament_id: number | null;
   tournament_round: number | null;
   tournament_match_id: number | null;
+  elapsed_seconds: number;
+  queue_count: number;
+  points_left_to_147: number;
   source_updated_at_ms: number;
 };
 

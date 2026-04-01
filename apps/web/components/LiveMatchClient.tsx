@@ -9,40 +9,99 @@ type Props = {
   initialLive: LiveMatchRow | null;
 };
 
+function readNumber(value: unknown, fallback: number): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function readNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function formatElapsed(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safe / 3600);
+  const minutes = Math.floor((safe % 3600) / 60);
+  const seconds = safe % 60;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function clampPointsLeft(value: number): number {
+  return Math.max(0, Math.min(147, Math.round(value)));
+}
+
 function normalizeLiveRow(value: unknown): LiveMatchRow | null {
   if (!value || typeof value !== "object") return null;
   const row = value as Record<string, unknown>;
+
+  const player1Score = readNumber(row.player1_score, 0);
+  const player2Score = readNumber(row.player2_score, 0);
+  const fallbackPointsLeft = clampPointsLeft(147 - (player1Score + player2Score));
+
   return {
     id: String(row.id ?? "active"),
-    is_active: Boolean(row.is_active),
-    player1_id: typeof row.player1_id === "number" ? row.player1_id : null,
-    player2_id: typeof row.player2_id === "number" ? row.player2_id : null,
+    is_active: row.is_active === true,
+    player1_id: readNullableNumber(row.player1_id),
+    player2_id: readNullableNumber(row.player2_id),
     player1_name: typeof row.player1_name === "string" ? row.player1_name : null,
     player2_name: typeof row.player2_name === "string" ? row.player2_name : null,
-    player1_score: typeof row.player1_score === "number" ? row.player1_score : 0,
-    player2_score: typeof row.player2_score === "number" ? row.player2_score : 0,
-    active_player_number: typeof row.active_player_number === "number" ? row.active_player_number : null,
-    current_break_player1: typeof row.current_break_player1 === "number" ? row.current_break_player1 : 0,
-    current_break_player2: typeof row.current_break_player2 === "number" ? row.current_break_player2 : 0,
-    highest_break_player1: typeof row.highest_break_player1 === "number" ? row.highest_break_player1 : 0,
-    highest_break_player2: typeof row.highest_break_player2 === "number" ? row.highest_break_player2 : 0,
-    highest_break_in_match: typeof row.highest_break_in_match === "number" ? row.highest_break_in_match : 0,
-    reds_remaining: typeof row.reds_remaining === "number" ? row.reds_remaining : 15,
+    player1_score: player1Score,
+    player2_score: player2Score,
+    active_player_number: readNullableNumber(row.active_player_number),
+    current_break_player1: readNumber(row.current_break_player1, 0),
+    current_break_player2: readNumber(row.current_break_player2, 0),
+    highest_break_player1: readNumber(row.highest_break_player1, 0),
+    highest_break_player2: readNumber(row.highest_break_player2, 0),
+    highest_break_in_match: readNumber(row.highest_break_in_match, 0),
+    reds_remaining: readNumber(row.reds_remaining, 15),
     yellow_visible: row.yellow_visible !== false,
     green_visible: row.green_visible !== false,
     brown_visible: row.brown_visible !== false,
     blue_visible: row.blue_visible !== false,
     pink_visible: row.pink_visible !== false,
     black_visible: row.black_visible !== false,
-    tournament_id: typeof row.tournament_id === "number" ? row.tournament_id : null,
-    tournament_round: typeof row.tournament_round === "number" ? row.tournament_round : null,
-    tournament_match_id: typeof row.tournament_match_id === "number" ? row.tournament_match_id : null,
-    source_updated_at_ms: typeof row.source_updated_at_ms === "number" ? row.source_updated_at_ms : Date.now()
+    tournament_id: readNullableNumber(row.tournament_id),
+    tournament_round: readNullableNumber(row.tournament_round),
+    tournament_match_id: readNullableNumber(row.tournament_match_id),
+    elapsed_seconds: readNumber(row.elapsed_seconds, 0),
+    queue_count: readNumber(row.queue_count, 0),
+    points_left_to_147: clampPointsLeft(readNumber(row.points_left_to_147, fallbackPointsLeft)),
+    source_updated_at_ms: readNumber(row.source_updated_at_ms, Date.now())
   };
 }
 
+function TimerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="live-icon" aria-hidden="true">
+      <circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 13V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 13L15.5 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M9 3h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function QueueIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="live-icon" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" fill="currentColor" />
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function LiveMatchClient({ initialLive }: Props) {
-  const [live, setLive] = useState<LiveMatchRow | null>(initialLive);
+  const [live, setLive] = useState<LiveMatchRow | null>(() => normalizeLiveRow(initialLive));
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   async function refreshLive() {
@@ -52,7 +111,7 @@ export function LiveMatchClient({ initialLive }: Props) {
       .eq("id", "active")
       .limit(1);
 
-    const row = ((data ?? []) as LiveMatchRow[])[0] ?? null;
+    const row = normalizeLiveRow((data ?? [])[0] ?? null);
     setLive(row);
   }
 
@@ -87,6 +146,18 @@ export function LiveMatchClient({ initialLive }: Props) {
 
   const statusNote = useMemo(() => (isRefreshing ? "Refreshing..." : "Live sync active"), [isRefreshing]);
 
+  const activeBreak = useMemo(() => {
+    if (!live) return 0;
+    if (live.active_player_number === 1) return live.current_break_player1;
+    if (live.active_player_number === 2) return live.current_break_player2;
+    return 0;
+  }, [live]);
+
+  const activePlayerLabel = useMemo(() => {
+    if (!live?.active_player_number) return "--";
+    return live.active_player_number === 1 ? "P1" : "P2";
+  }, [live]);
+
   return (
     <div className="grid" style={{ gap: "1rem" }}>
       <section>
@@ -101,26 +172,51 @@ export function LiveMatchClient({ initialLive }: Props) {
           <div className="panel-header">
             <h2 style={{ margin: 0 }}>Current Match</h2>
           </div>
+
           <div className="panel-body">
-            <div className="grid grid-2">
-              <article className="panel" style={{ padding: "1rem", borderRadius: "12px" }}>
-                <h3 style={{ margin: 0, color: "var(--gold-soft)" }}>{live.player1_name ?? "Player 1"}</h3>
-                <p style={{ fontSize: "2.3rem", margin: "0.2rem 0", fontWeight: 800 }}>{live.player1_score}</p>
-                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Current break: {live.current_break_player1}</p>
-                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Highest break: {live.highest_break_player1}</p>
-                {live.active_player_number === 1 ? <span className="badge badge-live">At table</span> : null}
+            <div className="live-scoreboard-top">
+              <article className={`live-player-card ${live.active_player_number === 1 ? "is-active" : ""}`}>
+                <h3>{live.player1_name ?? "Player 1"}</h3>
+                <p className="live-player-score">{live.player1_score}</p>
+                <p className="live-player-sub">Current break: {live.current_break_player1}</p>
+                <p className="live-player-sub">Highest break: {live.highest_break_player1}</p>
               </article>
-              <article className="panel" style={{ padding: "1rem", borderRadius: "12px" }}>
-                <h3 style={{ margin: 0, color: "var(--gold-soft)" }}>{live.player2_name ?? "Player 2"}</h3>
-                <p style={{ fontSize: "2.3rem", margin: "0.2rem 0", fontWeight: 800 }}>{live.player2_score}</p>
-                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Current break: {live.current_break_player2}</p>
-                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Highest break: {live.highest_break_player2}</p>
-                {live.active_player_number === 2 ? <span className="badge badge-live">At table</span> : null}
+
+              <div className="live-center-stack">
+                <div className="live-timer-card">
+                  <div className="live-timer-main">
+                    <TimerIcon />
+                    <span>{formatElapsed(live.elapsed_seconds)}</span>
+                  </div>
+                  <div className="live-queue-pill" title="Queue">
+                    <QueueIcon />
+                    <span>{live.queue_count}</span>
+                  </div>
+                </div>
+
+                <div className="live-mini-card">
+                  <span className="label">PTS LEFT</span>
+                  <span className="value">{live.points_left_to_147}</span>
+                </div>
+
+                <div className="live-mini-card">
+                  <span className="label">LIVE BREAK</span>
+                  <span className="value">{activeBreak}</span>
+                  <span className="sub">{activePlayerLabel}</span>
+                </div>
+              </div>
+
+              <article className={`live-player-card ${live.active_player_number === 2 ? "is-active" : ""}`}>
+                <h3>{live.player2_name ?? "Player 2"}</h3>
+                <p className="live-player-score">{live.player2_score}</p>
+                <p className="live-player-sub">Current break: {live.current_break_player2}</p>
+                <p className="live-player-sub">Highest break: {live.highest_break_player2}</p>
               </article>
             </div>
           </div>
-          <div className="panel-body" style={{ paddingTop: 0 }}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.55rem", marginBottom: "0.85rem" }}>
+
+          <div className="panel-body live-table-section">
+            <div className="live-meta-row">
               <div className="stat-chip">
                 <span className="label">Reds Left</span>
                 <span className="value">{live.reds_remaining}</span>
@@ -140,10 +236,13 @@ export function LiveMatchClient({ initialLive }: Props) {
             </div>
             <SnookerTablePreview live={live} />
           </div>
-          <div className="panel-body" style={{ paddingTop: 0 }}>
+
+          <div className="panel-body">
             <dl className="kv">
-              <dt>Active player</dt>
-              <dd>{live.active_player_number ?? "-"}</dd>
+              <dt>Timer</dt>
+              <dd>{formatElapsed(live.elapsed_seconds)}</dd>
+              <dt>Queue</dt>
+              <dd>{live.queue_count}</dd>
               <dt>Reds remaining</dt>
               <dd>{live.reds_remaining}</dd>
               <dt>Highest break (match)</dt>
