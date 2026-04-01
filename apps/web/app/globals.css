@@ -5,15 +5,22 @@
   --surface: #1f1418;
   --surface-soft: #281b20;
   --surface-strong: #120b0f;
+  --surface-elevated: #252020;
   --line: #5a323d;
+  --line-soft: rgba(200, 166, 90, 0.18);
   --ink: #f7efef;
   --ink-soft: #cfbbc1;
+  --ink-muted: #9a8089;
   --gold: #c8a65a;
   --gold-soft: #e7d4a0;
+  --gold-dark: #a68942;
   --burgundy: #791b2f;
+  --burgundy-light: #9e2d44;
+  --burgundy-dark: #5a1423;
   --burgundy-2: #5e1526;
   --danger: #d64545;
   --success: #2da06a;
+  --success-soft: #b8f3d6;
 }
 
 * {
@@ -28,11 +35,13 @@ body {
   font-family: "Segoe UI", "Avenir Next", "Helvetica Neue", sans-serif;
   color: var(--ink);
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 8px, transparent 8px 22px),
-    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.24)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 8px, transparent 8px 22px),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.2)),
     radial-gradient(circle at 6% 3%, #632132 0%, transparent 30%),
     radial-gradient(circle at 94% 2%, #2a5a3f 0%, transparent 25%),
     linear-gradient(145deg, var(--bg-0), var(--bg-1) 55%, var(--bg-2));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -40,118 +49,148 @@ a {
   text-decoration: none;
 }
 
+/* ── Layout Shell ───────────────────────────── */
+
 .site-shell {
-  width: min(1100px, calc(100% - 2rem));
+  width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
 }
 
 .page-root {
-  padding: 1.2rem 0 2rem;
+  padding: 1.4rem 0 2.5rem;
 }
+
+/* ── Sticky Header ──────────────────────────── */
 
 .site-header {
   position: sticky;
   top: 0;
   z-index: 30;
-  backdrop-filter: blur(8px);
-  background: color-mix(in oklab, #1a0d12 78%, transparent);
-  border-bottom: 1px solid rgba(200, 166, 90, 0.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: color-mix(in oklab, #1a0d12 82%, transparent);
+  border-bottom: 1px solid rgba(200, 166, 90, 0.22);
+  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.3);
 }
 
 .site-header-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 70px;
+  min-height: 64px;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
   color: #fff;
 }
 
 .brand-logo {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   object-fit: cover;
-  border: 1px solid rgba(200, 166, 90, 0.5);
-  box-shadow: 0 0 0 3px rgba(200, 166, 90, 0.12);
+  border: 1.5px solid rgba(200, 166, 90, 0.5);
+  box-shadow: 0 0 0 3px rgba(200, 166, 90, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .brand-text-wrap {
   display: inline-flex;
   flex-direction: column;
-  line-height: 1.06;
+  line-height: 1.1;
 }
 
 .brand-text-main {
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--gold-soft);
-  font-size: 0.93rem;
+  font-size: 0.95rem;
 }
 
 .brand-text-sub {
-  font-size: 0.66rem;
-  letter-spacing: 0.24em;
-  color: #fff;
-  opacity: 0.84;
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
 }
+
+/* ── Navigation ─────────────────────────────── */
 
 .site-nav {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
   flex-wrap: wrap;
   justify-content: flex-end;
 }
 
 .site-nav-link {
-  color: #f3dee5;
-  padding: 0.45rem 0.75rem;
-  border-radius: 8px;
-  font-size: 0.92rem;
+  color: rgba(243, 222, 229, 0.85);
+  padding: 0.5rem 0.85rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
   border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .site-nav-link:hover {
-  border-color: rgba(200, 166, 90, 0.32);
-  background: rgba(121, 27, 47, 0.35);
+  border-color: rgba(200, 166, 90, 0.35);
+  background: rgba(121, 27, 47, 0.3);
+  color: #fff;
 }
+
+.site-nav-link.is-active {
+  border-color: rgba(200, 166, 90, 0.45);
+  background: rgba(121, 27, 47, 0.42);
+  color: #fff;
+}
+
+/* ── Panels / Cards ─────────────────────────── */
 
 .panel {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent), var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
 }
 
 .panel-header {
-  padding: 1rem 1rem 0.6rem;
+  padding: 1rem 1.1rem 0.6rem;
 }
 
 .panel-header h2 {
   color: var(--gold-soft);
+  font-size: 1.05rem;
+  letter-spacing: 0.03em;
+  font-weight: 700;
 }
 
 .panel-body {
-  padding: 0 1rem 1rem;
+  padding: 0 1.1rem 1.1rem;
 }
+
+/* ── Titles ─────────────────────────────────── */
 
 .page-title {
   margin: 0;
   color: #fff5f8;
-  font-size: clamp(1.35rem, 1.8vw, 2.1rem);
+  font-size: clamp(1.35rem, 1.8vw, 2rem);
   letter-spacing: 0.03em;
+  font-weight: 800;
 }
 
 .page-subtitle {
-  margin-top: 0.35rem;
-  color: #ebd6dd;
-  font-size: 0.95rem;
+  margin-top: 0.3rem;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
 }
+
+/* ── Grid ───────────────────────────────────── */
 
 .grid {
   display: grid;
@@ -161,6 +200,8 @@ a {
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+
+/* ── Tables ─────────────────────────────────── */
 
 .table-wrap {
   overflow-x: auto;
@@ -173,30 +214,109 @@ table {
 
 th,
 td {
-  border-bottom: 1px solid rgba(200, 166, 90, 0.18);
-  padding: 0.64rem;
+  border-bottom: 1px solid var(--line-soft);
+  padding: 0.6rem 0.7rem;
   text-align: left;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
 }
 
 th {
   color: var(--gold-soft);
   font-weight: 700;
-  background: rgba(121, 27, 47, 0.28);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  background: rgba(121, 27, 47, 0.2);
+  text-transform: uppercase;
+}
+
+tbody tr {
+  transition: background 0.15s ease;
 }
 
 tbody tr:hover {
   background: rgba(200, 166, 90, 0.06);
 }
 
+/* ── Player Cards ───────────────────────────── */
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface-soft);
+  border: 1px solid rgba(200, 166, 90, 0.12);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.player-card:hover {
+  border-color: rgba(200, 166, 90, 0.3);
+  background: rgba(40, 27, 32, 0.9);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.player-card .avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1.5px solid rgba(200, 166, 90, 0.4);
+  background: var(--surface-strong);
+  flex-shrink: 0;
+}
+
+.player-card .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-card .name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-card .stats {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-top: 0.15rem;
+}
+
+.player-card .stat-value {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.player-card .action {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.player-card:hover .action {
+  opacity: 1;
+}
+
+/* ── Badges ─────────────────────────────────── */
+
 .badge {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.25rem 0.6rem;
-  font-size: 0.76rem;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .badge-live {
@@ -211,6 +331,8 @@ tbody tr:hover {
   border: 1px solid rgba(45, 160, 106, 0.4);
 }
 
+/* ── Buttons ────────────────────────────────── */
+
 .button,
 input,
 select,
@@ -220,15 +342,21 @@ textarea {
 
 .button {
   border: 1px solid rgba(200, 166, 90, 0.2);
-  border-radius: 10px;
-  padding: 0.56rem 0.88rem;
+  border-radius: 12px;
+  padding: 0.55rem 0.95rem;
   background: linear-gradient(180deg, #8a2740, #61192a);
   color: #fff;
   cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .button:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .button.secondary {
@@ -239,6 +367,18 @@ textarea {
   background: linear-gradient(180deg, #cb4646, #a12626);
 }
 
+.button.outlined {
+  background: transparent;
+  border: 1.5px solid var(--gold);
+  color: var(--gold);
+}
+
+.button.outlined:hover {
+  background: rgba(200, 166, 90, 0.1);
+}
+
+/* ── Forms ──────────────────────────────────── */
+
 .form-row {
   display: grid;
   gap: 0.55rem;
@@ -246,13 +386,22 @@ textarea {
 }
 
 .input {
-  border: 1px solid #85505d;
-  background: #120b0f;
+  border: 1px solid rgba(133, 80, 93, 0.6);
+  background: var(--surface-strong);
   color: #f6edf0;
   border-radius: 10px;
-  padding: 0.52rem 0.62rem;
+  padding: 0.55rem 0.7rem;
   width: 100%;
+  transition: border-color 0.15s ease;
 }
+
+.input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(200, 166, 90, 0.15);
+}
+
+/* ── Key-Value Layout ───────────────────────── */
 
 .kv {
   display: grid;
@@ -263,6 +412,7 @@ textarea {
 .kv dt {
   color: var(--gold-soft);
   font-weight: 700;
+  font-size: 0.88rem;
 }
 
 .kv dd {
@@ -270,17 +420,44 @@ textarea {
   color: #f5ebee;
 }
 
+/* ── Empty State ────────────────────────────── */
+
 .empty {
-  color: #f3e4e8;
-  background: rgba(18, 11, 15, 0.74);
-  border: 1px dashed rgba(200, 166, 90, 0.38);
-  border-radius: 14px;
-  padding: 1rem;
+  color: var(--ink-soft);
+  background: rgba(18, 11, 15, 0.6);
+  border: 1px dashed rgba(200, 166, 90, 0.3);
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  font-size: 0.92rem;
 }
 
+/* ── Avatars ────────────────────────────────── */
+
+.avatar-mini {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1.5px solid rgba(200, 166, 90, 0.45);
+  background: var(--surface-strong);
+}
+
+.avatar-large {
+  width: 120px;
+  height: 120px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2.5px solid rgba(200, 166, 90, 0.6);
+  background: var(--surface-strong);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Snooker Table Visual ───────────────────── */
+
 .snooker-table-shell {
-  background: rgba(18, 11, 15, 0.45);
-  border: 1px solid rgba(200, 166, 90, 0.28);
+  background: rgba(18, 11, 15, 0.4);
+  border: 1px solid rgba(200, 166, 90, 0.22);
   border-radius: 14px;
   padding: 0.85rem;
 }
@@ -304,11 +481,13 @@ textarea {
   font-size: 0.85rem;
 }
 
+/* ── Tournament Bracket ─────────────────────── */
+
 .bracket-scroll {
   overflow: auto;
-  border: 1px solid rgba(200, 166, 90, 0.24);
+  border: 1px solid rgba(200, 166, 90, 0.2);
   border-radius: 14px;
-  background: rgba(20, 20, 20, 0.44);
+  background: rgba(20, 20, 20, 0.4);
   padding: 0.75rem;
 }
 
@@ -346,8 +525,8 @@ textarea {
 }
 
 .bracket-round-label .long {
-  color: rgba(231, 212, 160, 0.66);
-  font-size: 0.67rem;
+  color: rgba(231, 212, 160, 0.55);
+  font-size: 0.65rem;
 }
 
 .bracket-round-body {
@@ -366,37 +545,38 @@ textarea {
   width: 198px;
   height: 74px;
   border-radius: 10px;
-  border: 1.5px solid rgba(176, 176, 176, 0.2);
-  background: rgba(20, 20, 20, 0.78);
+  border: 1.5px solid rgba(176, 176, 176, 0.15);
+  background: rgba(20, 20, 20, 0.8);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
+  transition: border-color 0.2s ease;
 }
 
 .bracket-match.is-final {
   width: 220px;
   height: 82px;
   border-width: 2px;
-  border-color: rgba(200, 166, 90, 0.82);
+  border-color: rgba(200, 166, 90, 0.7);
   background: rgba(20, 20, 20, 0.92);
-  box-shadow: 0 0 0 1px rgba(200, 166, 90, 0.2), 0 8px 20px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 0 0 1px rgba(200, 166, 90, 0.15), 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .bracket-match.is-ready {
-  border-color: rgba(200, 166, 90, 0.82);
+  border-color: rgba(200, 166, 90, 0.7);
 }
 
 .bracket-match.is-completed {
-  border-color: rgba(45, 160, 106, 0.66);
+  border-color: rgba(45, 160, 106, 0.55);
 }
 
 .bracket-match-no {
   position: absolute;
   top: 2px;
   left: 6px;
-  color: rgba(176, 176, 176, 0.65);
-  font-size: 0.6rem;
+  color: rgba(176, 176, 176, 0.5);
+  font-size: 0.58rem;
   letter-spacing: 0.06em;
 }
 
@@ -407,21 +587,21 @@ textarea {
 }
 
 .bracket-player.is-winner {
-  background: rgba(45, 160, 106, 0.1);
+  background: rgba(45, 160, 106, 0.08);
 }
 
 .bracket-player .accent {
   width: 4px;
   height: 100%;
-  background: rgba(176, 176, 176, 0.3);
+  background: rgba(176, 176, 176, 0.25);
 }
 
 .bracket-player .accent.a1 {
-  background: rgba(200, 166, 90, 0.68);
+  background: rgba(200, 166, 90, 0.6);
 }
 
 .bracket-player .accent.a2 {
-  background: rgba(166, 137, 66, 0.68);
+  background: rgba(166, 137, 66, 0.6);
 }
 
 .bracket-player .name {
@@ -448,14 +628,14 @@ textarea {
 
 .bracket-match .split {
   height: 1px;
-  background: rgba(176, 176, 176, 0.18);
+  background: rgba(176, 176, 176, 0.14);
 }
 
 .bracket-ready {
   position: absolute;
   right: 6px;
   bottom: 3px;
-  color: rgba(200, 166, 90, 0.86);
+  color: rgba(200, 166, 90, 0.8);
   font-size: 0.56rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -466,7 +646,7 @@ textarea {
 }
 
 .bracket-connector-path {
-  stroke: rgba(200, 166, 90, 0.48);
+  stroke: rgba(200, 166, 90, 0.4);
   stroke-width: 1.5;
   fill: none;
   stroke-linecap: round;
@@ -497,6 +677,100 @@ textarea {
   padding: 0.28rem 0.74rem;
 }
 
+/* ── Stat Chips ─────────────────────────────── */
+
+.stat-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  background: var(--surface-soft);
+  border: 1px solid rgba(200, 166, 90, 0.12);
+  border-radius: 10px;
+  min-width: 72px;
+}
+
+.stat-chip .label {
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.stat-chip .value {
+  font-size: 1.15rem;
+  color: var(--gold);
+  font-weight: 800;
+  margin-top: 0.1rem;
+}
+
+/* ── Tournament Card ────────────────────────── */
+
+.tournament-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface-soft);
+  border: 1px solid rgba(200, 166, 90, 0.12);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.tournament-card:hover {
+  border-color: rgba(200, 166, 90, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.tournament-card .icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(200, 166, 90, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.2rem;
+}
+
+.tournament-card .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.tournament-card .name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.tournament-card .meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-top: 0.15rem;
+}
+
+.tournament-card .action {
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.tournament-card:hover .action {
+  opacity: 1;
+}
+
+/* ── Responsive ─────────────────────────────── */
+
 @media (max-width: 860px) {
   .grid-2 {
     grid-template-columns: 1fr;
@@ -508,7 +782,7 @@ textarea {
 
   .site-header-inner {
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: 0.5rem;
     flex-direction: column;
     padding: 0.5rem 0;
   }
@@ -523,5 +797,37 @@ textarea {
 
   .bracket-match.is-final {
     width: 186px;
+  }
+
+  .page-root {
+    padding: 1rem 0 1.5rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .site-shell {
+    width: calc(100% - 1.2rem);
+  }
+
+  .panel-header {
+    padding: 0.75rem 0.8rem 0.4rem;
+  }
+
+  .panel-body {
+    padding: 0 0.8rem 0.8rem;
+  }
+
+  th, td {
+    padding: 0.45rem 0.5rem;
+    font-size: 0.82rem;
+  }
+
+  .player-card {
+    padding: 0.55rem 0.7rem;
+  }
+
+  .player-card .avatar {
+    width: 36px;
+    height: 36px;
   }
 }

@@ -101,21 +101,43 @@ export function LiveMatchClient({ initialLive }: Props) {
           <div className="panel-header">
             <h2 style={{ margin: 0 }}>Current Match</h2>
           </div>
-          <div className="panel-body grid grid-2">
-            <article className="panel" style={{ padding: "1rem" }}>
-              <h3 style={{ marginTop: 0 }}>{live.player1_name ?? "Player 1"}</h3>
-              <p style={{ fontSize: "2rem", margin: "0.2rem 0" }}>{live.player1_score}</p>
-              <p>Current break: {live.current_break_player1}</p>
-              <p>Highest break: {live.highest_break_player1}</p>
-            </article>
-            <article className="panel" style={{ padding: "1rem" }}>
-              <h3 style={{ marginTop: 0 }}>{live.player2_name ?? "Player 2"}</h3>
-              <p style={{ fontSize: "2rem", margin: "0.2rem 0" }}>{live.player2_score}</p>
-              <p>Current break: {live.current_break_player2}</p>
-              <p>Highest break: {live.highest_break_player2}</p>
-            </article>
+          <div className="panel-body">
+            <div className="grid grid-2">
+              <article className="panel" style={{ padding: "1rem", borderRadius: "12px" }}>
+                <h3 style={{ margin: 0, color: "var(--gold-soft)" }}>{live.player1_name ?? "Player 1"}</h3>
+                <p style={{ fontSize: "2.3rem", margin: "0.2rem 0", fontWeight: 800 }}>{live.player1_score}</p>
+                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Current break: {live.current_break_player1}</p>
+                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Highest break: {live.highest_break_player1}</p>
+                {live.active_player_number === 1 ? <span className="badge badge-live">At table</span> : null}
+              </article>
+              <article className="panel" style={{ padding: "1rem", borderRadius: "12px" }}>
+                <h3 style={{ margin: 0, color: "var(--gold-soft)" }}>{live.player2_name ?? "Player 2"}</h3>
+                <p style={{ fontSize: "2.3rem", margin: "0.2rem 0", fontWeight: 800 }}>{live.player2_score}</p>
+                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Current break: {live.current_break_player2}</p>
+                <p style={{ margin: "0.2rem 0", color: "var(--ink-soft)" }}>Highest break: {live.highest_break_player2}</p>
+                {live.active_player_number === 2 ? <span className="badge badge-live">At table</span> : null}
+              </article>
+            </div>
           </div>
           <div className="panel-body" style={{ paddingTop: 0 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.55rem", marginBottom: "0.85rem" }}>
+              <div className="stat-chip">
+                <span className="label">Reds Left</span>
+                <span className="value">{live.reds_remaining}</span>
+              </div>
+              <div className="stat-chip">
+                <span className="label">Highest Break</span>
+                <span className="value">{live.highest_break_in_match}</span>
+              </div>
+              <div className="stat-chip">
+                <span className="label">Active</span>
+                <span className="value">{live.active_player_number ?? "-"}</span>
+              </div>
+              <div className="stat-chip">
+                <span className="label">Format</span>
+                <span className="value">{live.tournament_id ? "Tournament" : "Quick"}</span>
+              </div>
+            </div>
             <SnookerTablePreview live={live} />
           </div>
           <div className="panel-body" style={{ paddingTop: 0 }}>

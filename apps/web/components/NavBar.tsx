@@ -1,4 +1,7 @@
+ "use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const links = [
   { href: "/players", label: "Players" },
@@ -8,6 +11,14 @@ const links = [
 ];
 
 export function NavBar() {
+  const pathname = usePathname();
+
+  function isActive(href: string): boolean {
+    if (!pathname) return false;
+    if (href === "/admin/login") return pathname.startsWith("/admin");
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
   return (
     <header className="site-header">
       <div className="site-shell site-header-inner">
@@ -20,7 +31,11 @@ export function NavBar() {
         </Link>
         <nav className="site-nav" aria-label="Main">
           {links.map((link) => (
-            <Link key={link.href} href={link.href} className="site-nav-link">
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`site-nav-link ${isActive(link.href) ? "is-active" : ""}`.trim()}
+            >
               {link.label}
             </Link>
           ))}

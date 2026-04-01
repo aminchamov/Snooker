@@ -49,7 +49,14 @@ export default async function PlayersPage() {
                   <tr key={row.player_id}>
                     <td>{index + 1}</td>
                     <td>
-                      <Link href={`/players/${row.player_id}`}>{row.name}</Link>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}>
+                        <img
+                          src={row.image_uri ?? "/elocho_logo.png"}
+                          alt={`${row.name} avatar`}
+                          className="avatar-mini"
+                        />
+                        <Link href={`/players/${row.player_id}`}>{row.name}</Link>
+                      </span>
                     </td>
                     <td>{row.games_played}</td>
                     <td>{row.wins}</td>
@@ -68,38 +75,41 @@ export default async function PlayersPage() {
 
       <section className="panel">
         <div className="panel-header">
-          <h2 style={{ margin: 0 }}>Player List</h2>
+          <h2 style={{ margin: 0 }}>Player Directory</h2>
         </div>
-        <div className="panel-body table-wrap">
+        <div className="panel-body">
           {playerRows.length === 0 ? (
             <div className="empty">No players synced yet.</div>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Wins</th>
-                  <th>Draws</th>
-                  <th>Losses</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {playerRows.map((player) => (
-                  <tr key={player.id}>
-                    <td>{player.id}</td>
-                    <td>{player.name}</td>
-                    <td>{player.wins}</td>
-                    <td>{player.draws}</td>
-                    <td>{player.losses}</td>
-                    <td>
-                      <Link href={`/players/${player.id}`}>View details</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="grid" style={{ gap: "0.65rem" }}>
+              {playerRows.map((player) => (
+                <Link key={player.id} href={`/players/${player.id}`} className="player-card">
+                  <img
+                    src={player.image_uri ?? "/elocho_logo.png"}
+                    alt={`${player.name} avatar`}
+                    className="avatar"
+                  />
+                  <div className="info">
+                    <div className="name">{player.name}</div>
+                    <div className="stats">
+                      <span>
+                        W <span className="stat-value">{player.wins}</span>
+                      </span>
+                      <span>
+                        D <span className="stat-value">{player.draws}</span>
+                      </span>
+                      <span>
+                        L <span className="stat-value">{player.losses}</span>
+                      </span>
+                      <span>
+                        Games <span className="stat-value">{player.total_matches}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="action">Open</span>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </section>

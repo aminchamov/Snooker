@@ -29,7 +29,7 @@ export default async function TournamentsPage() {
           </div>
           <div className="panel-body">
             <span className="badge badge-live">Live now</span>
-            <p style={{ marginBottom: 0 }}>
+            <p style={{ marginBottom: 0, marginTop: "0.6rem" }}>
               {live.player1_name ?? "Player 1"} {live.player1_score} - {live.player2_score} {live.player2_name ?? "Player 2"}
               {live.tournament_id ? ` (Tournament #${live.tournament_id})` : ""}
             </p>
@@ -41,40 +41,29 @@ export default async function TournamentsPage() {
         <div className="panel-header">
           <h2 style={{ margin: 0 }}>All Tournaments</h2>
         </div>
-        <div className="panel-body table-wrap">
+        <div className="panel-body">
           {rows.length === 0 ? (
             <div className="empty">No tournaments synced yet.</div>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Status</th>
-                  <th>Players</th>
-                  <th>Rounds</th>
-                  <th>Champion</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((t) => (
-                  <tr key={t.id}>
-                    <td>{t.id}</td>
-                    <td>{t.name}</td>
-                    <td>
-                      <span className={`badge ${t.status === "in_progress" ? "badge-live" : "badge-ok"}`}>{t.status}</span>
-                    </td>
-                    <td>{t.player_count}</td>
-                    <td>{t.total_rounds}</td>
-                    <td>{t.champion_player_id ?? "-"}</td>
-                    <td>
-                      <Link href={`/tournaments/${t.id}`}>Open</Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="grid" style={{ gap: "0.65rem" }}>
+              {rows.map((t) => (
+                <Link key={t.id} href={`/tournaments/${t.id}`} className="tournament-card">
+                  <div className="icon-wrap">🏆</div>
+                  <div className="info">
+                    <div className="name">{t.name}</div>
+                    <div className="meta">
+                      <span>
+                        <span className={`badge ${t.status === "in_progress" ? "badge-live" : "badge-ok"}`}>{t.status}</span>
+                      </span>
+                      <span>{t.player_count} players</span>
+                      <span>{t.total_rounds} rounds</span>
+                      <span>Champion: {t.champion_player_id ? `#${t.champion_player_id}` : "-"}</span>
+                    </div>
+                  </div>
+                  <span className="action">Open</span>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
       </section>

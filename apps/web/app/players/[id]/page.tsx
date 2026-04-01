@@ -64,22 +64,36 @@ export default async function PlayerDetailPage({ params }: Props) {
           <h2 style={{ margin: 0 }}>Statistics</h2>
         </div>
         <div className="panel-body">
-          <dl className="kv">
-            <dt>Games played</dt>
-            <dd>{r?.games_played ?? p.total_matches}</dd>
-            <dt>Wins</dt>
-            <dd>{r?.wins ?? p.wins}</dd>
-            <dt>Draws</dt>
-            <dd>{r?.draws ?? p.draws}</dd>
-            <dt>Losses</dt>
-            <dd>{r?.losses ?? p.losses}</dd>
-            <dt>Max break</dt>
-            <dd>{r?.max_break ?? 0}</dd>
-            <dt>Average points per match</dt>
-            <dd>{Number(r?.average_points_per_match ?? 0).toFixed(2)}</dd>
-            <dt>Tournaments won</dt>
-            <dd>{r?.tournaments_won ?? p.tournaments_won}</dd>
-          </dl>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.55rem" }}>
+            <div className="stat-chip">
+              <span className="label">Games</span>
+              <span className="value">{r?.games_played ?? p.total_matches}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Wins</span>
+              <span className="value">{r?.wins ?? p.wins}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Draws</span>
+              <span className="value">{r?.draws ?? p.draws}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Losses</span>
+              <span className="value">{r?.losses ?? p.losses}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Max Break</span>
+              <span className="value">{r?.max_break ?? 0}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Avg Points</span>
+              <span className="value">{Number(r?.average_points_per_match ?? 0).toFixed(2)}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Titles</span>
+              <span className="value">{r?.tournaments_won ?? p.tournaments_won}</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -125,7 +139,7 @@ export default async function PlayerDetailPage({ params }: Props) {
           {tournaments.length === 0 ? (
             <div className="empty">No tournament wins yet.</div>
           ) : (
-            <ul>
+            <ul style={{ margin: 0, paddingLeft: "1.2rem" }}>
               {tournaments.map((t) => (
                 <li key={t.id}>
                   <Link href={`/tournaments/${t.id}`}>{t.name}</Link>

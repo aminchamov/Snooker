@@ -52,16 +52,28 @@ export default async function TournamentDetailPage({ params }: Props) {
           <h2 style={{ margin: 0 }}>Tournament Overview</h2>
         </div>
         <div className="panel-body">
-          <dl className="kv">
-            <dt>Status</dt>
-            <dd>{t.status}</dd>
-            <dt>Player count</dt>
-            <dd>{t.player_count}</dd>
-            <dt>Total rounds</dt>
-            <dd>{t.total_rounds}</dd>
-            <dt>Champion</dt>
-            <dd>{t.champion_player_id ? playerMap.get(t.champion_player_id) ?? `#${t.champion_player_id}` : "-"}</dd>
-          </dl>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.55rem" }}>
+            <div className="stat-chip">
+              <span className="label">Status</span>
+              <span className="value" style={{ fontSize: "0.95rem" }}>
+                {t.status}
+              </span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Players</span>
+              <span className="value">{t.player_count}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Rounds</span>
+              <span className="value">{t.total_rounds}</span>
+            </div>
+            <div className="stat-chip">
+              <span className="label">Champion</span>
+              <span className="value" style={{ fontSize: "0.95rem" }}>
+                {t.champion_player_id ? playerMap.get(t.champion_player_id) ?? `#${t.champion_player_id}` : "-"}
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -86,6 +98,7 @@ export default async function TournamentDetailPage({ params }: Props) {
               <thead>
                 <tr>
                   <th>Match ID</th>
+                  <th>Players</th>
                   <th>Score</th>
                   <th>Winner</th>
                   <th>Highest Break</th>
@@ -95,6 +108,9 @@ export default async function TournamentDetailPage({ params }: Props) {
                 {resultRows.map((m) => (
                   <tr key={m.id}>
                     <td>{m.id}</td>
+                    <td>
+                      {(playerMap.get(m.player1_id) ?? `#${m.player1_id}`) + " vs " + (playerMap.get(m.player2_id) ?? `#${m.player2_id}`)}
+                    </td>
                     <td>
                       {m.player1_score} - {m.player2_score}
                     </td>
