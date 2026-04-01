@@ -9,6 +9,10 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
+function isTrackableMatch(match: MatchRow): boolean {
+  return !(match.player1_score === 0 && match.player2_score === 0);
+}
+
 export default async function PlayerDetailPage({ params }: Props) {
   const { id } = await params;
   const playerId = Number(id);
@@ -32,7 +36,7 @@ export default async function PlayerDetailPage({ params }: Props) {
 
   const p = playerRes.data as PlayerRow;
   const r = rankingRes.data as PlayerRankingRow | null;
-  const recentMatches = (matchesRes.data ?? []) as MatchRow[];
+  const recentMatches = ((matchesRes.data ?? []) as MatchRow[]).filter(isTrackableMatch);
   const tournaments = (wonTournamentsRes.data ?? []) as TournamentRow[];
 
   return (
@@ -40,6 +44,19 @@ export default async function PlayerDetailPage({ params }: Props) {
       <section>
         <h1 className="page-title">{p.name}</h1>
         <p className="page-subtitle">Player details and latest synced statistics.</p>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2 style={{ margin: 0 }}>Profile Avatar</h2>
+        </div>
+        <div className="panel-body" style={{ display: "flex", justifyContent: "center", paddingTop: "1rem" }}>
+          <img
+            src={p.image_uri ?? "/elocho_logo.png"}
+            alt={`${p.name} avatar`}
+            className="avatar-large"
+          />
+        </div>
       </section>
 
       <section className="panel">

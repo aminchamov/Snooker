@@ -9,6 +9,10 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
+function isTrackableMatch(match: MatchRow): boolean {
+  return !(match.player1_score === 0 && match.player2_score === 0);
+}
+
 export default async function TournamentDetailPage({ params }: Props) {
   const { id } = await params;
   const tournamentId = Number(id);
@@ -34,7 +38,7 @@ export default async function TournamentDetailPage({ params }: Props) {
   const tmRows = (bracketMatchesRes.data ?? []) as TournamentMatchRow[];
   const playerRows = (playersRes.data ?? []) as PlayerRow[];
   const playerMap = new Map(playerRows.map((p) => [p.id, p.name]));
-  const resultRows = (matchesRes.data ?? []) as MatchRow[];
+  const resultRows = ((matchesRes.data ?? []) as MatchRow[]).filter(isTrackableMatch);
 
   return (
     <div className="grid" style={{ gap: "1rem" }}>

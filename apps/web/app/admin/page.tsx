@@ -44,6 +44,10 @@ type MatchDateGroup = {
   matches: MatchRow[];
 };
 
+function isTrackableMatch(match: MatchRow): boolean {
+  return !(match.player1_score === 0 && match.player2_score === 0);
+}
+
 function toDateKeyLocal(ms: number): string {
   if (!Number.isFinite(ms) || ms <= 0) return "Unknown";
   const date = new Date(ms);
@@ -279,7 +283,7 @@ export default function AdminDashboardPage() {
     if (matchesRes.error) {
       setStatusError(matchesRes.error.message);
     } else {
-      setMatches((matchesRes.data ?? []) as MatchRow[]);
+      setMatches(((matchesRes.data ?? []) as MatchRow[]).filter(isTrackableMatch));
     }
 
     if (showLoader) {
