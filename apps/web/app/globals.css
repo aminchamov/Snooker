@@ -513,6 +513,30 @@ textarea {
   font-weight: 800;
 }
 
+.live-player-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.live-player-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid rgba(200, 166, 90, 0.55);
+  background: rgba(18, 11, 15, 0.9);
+}
+
+.live-player-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-soft);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
 .live-player-score {
   margin: 0.1rem 0 0.25rem;
   font-size: clamp(2rem, 4vw, 2.5rem);

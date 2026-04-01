@@ -9,6 +9,11 @@ type Props = {
   initialLive: LiveMatchRow | null;
 };
 
+type PlayerImageRow = {
+  id: number;
+  image_uri: string | null;
+};
+
 function readNumber(value: unknown, fallback: number): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -102,7 +107,36 @@ function QueueIcon() {
 
 export function LiveMatchClient({ initialLive }: Props) {
   const [live, setLive] = useState<LiveMatchRow | null>(() => normalizeLiveRow(initialLive));
+  const [playerImageById, setPlayerImageById] = useState<Record<number, string>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  async function loadPlayerImages(liveRow: LiveMatchRow | null) {
+    if (!liveRow) return;
+    const ids = [liveRow.player1_id, liveRow.player2_id].filter((id): id is number => typeof id === "number" && id > 0);
+    if (ids.length === 0) return;
+
+    const uniqueIds = Array.from(new Set(ids));
+    const { data } = await browserSupabase
+      .from("players")
+      .select("id,image_uri")
+      .in("id", uniqueIds);
+
+    const rows = (data ?? []) as PlayerImageRow[];
+    if (rows.length === 0) return;
+
+    setPlayerImageById((prev) => {
+      const next = { ...prev };
+      for (const row of rows) {
+        next[row.id] = row.image_uri ?? "";
+      }
+      return next;
+    });
+  }
+
+  async function applyLiveRow(liveRow: LiveMatchRow | null) {
+    setLive(liveRow);
+    await loadPlayerImages(liveRow);
+  }
 
   async function refreshLive() {
     const { data } = await browserSupabase
@@ -112,7 +146,7 @@ export function LiveMatchClient({ initialLive }: Props) {
       .limit(1);
 
     const row = normalizeLiveRow((data ?? [])[0] ?? null);
-    setLive(row);
+    await applyLiveRow(row);
   }
 
   useEffect(() => {
@@ -133,10 +167,12 @@ export function LiveMatchClient({ initialLive }: Props) {
         },
         (payload) => {
           const normalized = normalizeLiveRow(payload.new);
-          setLive(normalized);
+          void applyLiveRow(normalized);
         }
       )
       .subscribe();
+
+    void loadPlayerImages(live);
 
     return () => {
       window.clearInterval(pollId);
@@ -158,6 +194,9 @@ export function LiveMatchClient({ initialLive }: Props) {
     return live.active_player_number === 1 ? "P1" : "P2";
   }, [live]);
 
+  const player1Image = live?.player1_id ? playerImageById[live.player1_id] ?? "" : "";
+  const player2Image = live?.player2_id ? playerImageById[live.player2_id] ?? "" : "";
+
   return (
     <div className="grid" style={{ gap: "1rem" }}>
       <section>
@@ -176,6 +215,15 @@ export function LiveMatchClient({ initialLive }: Props) {
           <div className="panel-body">
             <div className="live-scoreboard-top">
               <article className={`live-player-card ${live.active_player_number === 1 ? "is-active" : ""}`}>
+                <div className="live-player-head">
+                  {player1Image ? (
+                    <img src={player1Image} alt={live.player1_name ?? "Player 1"} className="live-player-avatar" />
+                  ) : (
+                    <div className="live-player-avatar live-player-avatar-fallback">
+                      {(live.player1_name ?? "P1").trim().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 <h3>{live.player1_name ?? "Player 1"}</h3>
                 <p className="live-player-score">{live.player1_score}</p>
                 <p className="live-player-sub">Current break: {live.current_break_player1}</p>
@@ -207,6 +255,15 @@ export function LiveMatchClient({ initialLive }: Props) {
               </div>
 
               <article className={`live-player-card ${live.active_player_number === 2 ? "is-active" : ""}`}>
+                <div className="live-player-head">
+                  {player2Image ? (
+                    <img src={player2Image} alt={live.player2_name ?? "Player 2"} className="live-player-avatar" />
+                  ) : (
+                    <div className="live-player-avatar live-player-avatar-fallback">
+                      {(live.player2_name ?? "P2").trim().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
                 <h3>{live.player2_name ?? "Player 2"}</h3>
                 <p className="live-player-score">{live.player2_score}</p>
                 <p className="live-player-sub">Current break: {live.current_break_player2}</p>
