@@ -15,8 +15,8 @@ function mapUsernameToEmail(username: string): string {
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("12345678");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +59,7 @@ export default function AdminLoginPage() {
     <div className="grid" style={{ gap: "1rem" }}>
       <section>
         <h1 className="page-title">Admin Login</h1>
-        <p className="page-subtitle">Use username <strong>admin</strong> and password <strong>12345678</strong>.</p>
+        <p className="page-subtitle">Sign in with your admin credentials.</p>
       </section>
 
       <section className="panel" style={{ maxWidth: 460 }}>
@@ -72,6 +72,7 @@ export default function AdminLoginPage() {
                 className="input"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
+                autoComplete="username"
                 required
               />
             </div>
@@ -83,6 +84,7 @@ export default function AdminLoginPage() {
                 className="input"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
                 required
               />
             </div>
