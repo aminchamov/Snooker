@@ -1077,11 +1077,17 @@ body {
 }
 
 .site-header-inner {
-  min-height: 70px;
+  min-height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0 0.8rem;
 }
 
 .brand-logo {
-  height: 48px;
+  height: 74px;
 }
 
 .site-nav-link {
@@ -1089,6 +1095,12 @@ body {
   border-radius: 12px;
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.site-nav {
+  width: 100%;
+  justify-content: center;
+  gap: 0.4rem;
 }
 
 .site-nav-link:hover {
@@ -1283,21 +1295,28 @@ tbody tr:hover {
 
 @media (max-width: 900px) {
   .site-header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.55rem;
-    padding: 0.55rem 0;
+    align-items: center;
+    padding: 0.62rem 0 0.7rem;
   }
 
   .site-nav {
     width: 100%;
-    justify-content: flex-start;
+    justify-content: center;
   }
 }
 
 @media (max-width: 680px) {
   .site-shell {
     width: calc(100% - 1.3rem);
+  }
+
+  .brand-logo {
+    height: 62px;
+  }
+
+  .site-nav-link {
+    padding: 0.45rem 0.72rem;
+    font-size: 0.84rem;
   }
 
   .home-hero-content {

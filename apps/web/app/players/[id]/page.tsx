@@ -39,6 +39,22 @@ export default async function PlayerDetailPage({ params }: Props) {
   const recentMatches = ((matchesRes.data ?? []) as MatchRow[]).filter(isTrackableMatch);
   const tournaments = (wonTournamentsRes.data ?? []) as TournamentRow[];
 
+  const opponentIds = Array.from(
+    new Set(
+      recentMatches.map((match) => (match.player1_id === playerId ? match.player2_id : match.player1_id))
+    )
+  ).filter((id) => id > 0);
+
+  const opponentRes = opponentIds.length > 0
+    ? await supabase.from("players").select("id,name").in("id", opponentIds)
+    : { data: [] as Array<{ id: number; name: string }> };
+
+  const nameById = new Map<number, string>();
+  nameById.set(p.id, p.name);
+  ((opponentRes.data ?? []) as Array<{ id: number; name: string }>).forEach((row) => {
+    nameById.set(row.id, row.name);
+  });
+
   return (
     <div className="grid" style={{ gap: "1rem" }}>
       <section>
@@ -108,7 +124,7 @@ export default async function PlayerDetailPage({ params }: Props) {
             <table>
               <thead>
                 <tr>
-                  <th>Match ID</th>
+                  <th>Opponent</th>
                   <th>Score</th>
                   <th>Type</th>
                   <th>Winner</th>
@@ -117,12 +133,12 @@ export default async function PlayerDetailPage({ params }: Props) {
               <tbody>
                 {recentMatches.map((match) => (
                   <tr key={match.id}>
-                    <td>{match.id}</td>
+                    <td>{nameById.get(match.player1_id === playerId ? match.player2_id : match.player1_id) ?? "-"}</td>
                     <td>
                       {match.player1_score} - {match.player2_score}
                     </td>
                     <td>{match.match_type}</td>
-                    <td>{match.is_draw ? "Draw" : match.winner_player_id ?? "-"}</td>
+                    <td>{match.is_draw ? "Draw" : (match.winner_player_id ? nameById.get(match.winner_player_id) ?? `#${match.winner_player_id}` : "-")}</td>
                   </tr>
                 ))}
               </tbody>
