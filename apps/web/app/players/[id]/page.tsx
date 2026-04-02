@@ -13,6 +13,15 @@ function isTrackableMatch(match: MatchRow): boolean {
   return !(match.player1_score === 0 && match.player2_score === 0);
 }
 
+function formatMatchDate(startedAtMs: number): string {
+  if (!Number.isFinite(startedAtMs) || startedAtMs <= 0) return "-";
+  const d = new Date(startedAtMs);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default async function PlayerDetailPage({ params }: Props) {
   const { id } = await params;
   const playerId = Number(id);
@@ -124,6 +133,7 @@ export default async function PlayerDetailPage({ params }: Props) {
             <table>
               <thead>
                 <tr>
+                  <th>Date</th>
                   <th>Opponent</th>
                   <th>Score</th>
                   <th>Type</th>
@@ -133,6 +143,7 @@ export default async function PlayerDetailPage({ params }: Props) {
               <tbody>
                 {recentMatches.map((match) => (
                   <tr key={match.id}>
+                    <td>{formatMatchDate(match.started_at_ms)}</td>
                     <td>{nameById.get(match.player1_id === playerId ? match.player2_id : match.player1_id) ?? "-"}</td>
                     <td>
                       {match.player1_score} - {match.player2_score}
