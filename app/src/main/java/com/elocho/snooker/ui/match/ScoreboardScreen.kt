@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -244,9 +245,18 @@ private fun LandscapeScoreboard(
                 modifier = Modifier.weight(1f)
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AppLogo(height = 22.dp)
+                AppLogo(height = 34.dp)
                 Spacer(modifier = Modifier.height(4.dp))
-                TimerCard(timeString = timeString)
+                TimerCard(
+                    timeString = timeString,
+                    queueCount = uiState.queuedPlayersCount,
+                    setScoreText = if (uiState.activeTournamentId != null) "${uiState.tournamentPlayer1SetsWon}-${uiState.tournamentPlayer2SetsWon}" else null,
+                    setsToWin = if (uiState.activeTournamentId != null) uiState.tournamentSetsToWin else null
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                PointsLeftCard(pointsLeft = uiState.pointsLeftToScore147)
+                Spacer(modifier = Modifier.height(4.dp))
+                LiveBreakStatsCard(uiState = uiState)
             }
             PlayerHeaderCard(
                 playerName = uiState.player2?.name ?: "Player 2",
@@ -274,7 +284,7 @@ private fun LandscapeScoreboard(
                     onScoreAction = { action -> onScoreAction(1, action) },
                     modifier = Modifier
                         .weight(1f)
-                        .height(220.dp),
+                        .height(150.dp),
                     compact = true
                 )
                 ScoreControlPanel(
@@ -283,12 +293,10 @@ private fun LandscapeScoreboard(
                     onScoreAction = { action -> onScoreAction(2, action) },
                     modifier = Modifier
                         .weight(1f)
-                        .height(220.dp),
+                        .height(150.dp),
                     compact = true
                 )
             }
-
-            LiveBreakStatsCard(uiState = uiState, isCompact = true)
 
             BoxWithConstraints(
                 modifier = Modifier
@@ -374,14 +382,20 @@ private fun PortraitScoreboard(
             )
         }
 
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            AppLogo(height = 20.dp)
-            Spacer(modifier = Modifier.width(12.dp))
-            TimerCard(timeString = timeString)
+            AppLogo(height = 46.dp)
+            TimerCard(
+                timeString = timeString,
+                queueCount = uiState.queuedPlayersCount,
+                setScoreText = if (uiState.activeTournamentId != null) "${uiState.tournamentPlayer1SetsWon}-${uiState.tournamentPlayer2SetsWon}" else null,
+                setsToWin = if (uiState.activeTournamentId != null) uiState.tournamentSetsToWin else null
+            )
+            PointsLeftCard(pointsLeft = uiState.pointsLeftToScore147)
+            LiveBreakStatsCard(uiState = uiState)
         }
 
         Row(
@@ -392,19 +406,21 @@ private fun PortraitScoreboard(
                 title = uiState.player1?.name ?: "Player 1",
                 score = uiState.player1Score,
                 onScoreAction = { action -> onScoreAction(1, action) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(160.dp),
                 compact = true
             )
             ScoreControlPanel(
                 title = uiState.player2?.name ?: "Player 2",
                 score = uiState.player2Score,
                 onScoreAction = { action -> onScoreAction(2, action) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(160.dp),
                 compact = true
             )
         }
-
-        LiveBreakStatsCard(uiState = uiState, isCompact = true)
 
         BoxWithConstraints(
             modifier = Modifier
@@ -501,6 +517,9 @@ private fun PlayerHeaderCard(
 @Composable
 private fun TimerCard(
     timeString: String,
+    queueCount: Int,
+    setScoreText: String? = null,
+    setsToWin: Int? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -521,6 +540,79 @@ private fun TimerCard(
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 20.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.Person,
+                contentDescription = "Queue",
+                tint = GoldLight,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = queueCount.toString(),
+                color = GoldLight,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp
+            )
+            if (!setScoreText.isNullOrBlank()) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "S",
+                    color = Gold,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = setScoreText,
+                    color = GoldLight,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 14.sp
+                )
+                if (setsToWin != null && setsToWin > 0) {
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = "/$setsToWin",
+                        color = LightGray,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PointsLeftCard(
+    pointsLeft: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkSurface.copy(alpha = 0.9f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "PTS LEFT",
+                color = Gold,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "$pointsLeft",
+                color = PureWhite,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 18.sp
             )
         }
     }
@@ -554,7 +646,7 @@ private fun ScoreControlPanel(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -580,42 +672,49 @@ private fun ScoreControlPanel(
 @Composable
 private fun LiveBreakStatsCard(
     uiState: ScoreboardUiState,
-    isCompact: Boolean
+    modifier: Modifier = Modifier
 ) {
     val activeBreak = when (uiState.activePlayerNumber) {
         1 -> uiState.currentBreakPlayer1
         2 -> uiState.currentBreakPlayer2
         else -> 0
     }
-    val activePlayerName = when (uiState.activePlayerNumber) {
-        1 -> uiState.player1?.name ?: "Player 1"
-        2 -> uiState.player2?.name ?: "Player 2"
-        else -> "No Active Visit"
+    val activePlayerLabel = when (uiState.activePlayerNumber) {
+        1 -> "P1"
+        2 -> "P2"
+        else -> "--"
     }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = DarkSurface.copy(alpha = 0.9f))
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "LIVE BREAK STATS",
+                text = "LIVE BREAK",
                 color = Gold,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                fontSize = if (isCompact) 11.sp else 12.sp
+                fontSize = 12.sp
             )
-
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Current break: $activeBreak ($activePlayerName)",
+                text = activeBreak.toString(),
                 color = PureWhite,
-                fontSize = if (isCompact) 11.sp else 12.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 18.sp
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = activePlayerLabel,
+                color = GoldLight,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                fontSize = 12.sp
             )
         }
     }
@@ -658,14 +757,12 @@ private fun ScoreControl(
 
         Text(
             text = score.toString(),
-            fontSize = if (compact) 40.sp else 52.sp,
+            fontSize = if (compact) 44.sp else 54.sp,
             fontWeight = FontWeight.ExtraBold,
             color = PureWhite,
-            modifier = Modifier.padding(vertical = 6.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
             textAlign = TextAlign.Center
         )
-
-        // Correction button intentionally hidden per updated UI request.
     }
 }
 
@@ -687,10 +784,10 @@ private fun ScoreActionButton(
     }
 
     val size = when {
-        action == SnookerScoreAction.ERROR && compact -> 30.dp
-        action == SnookerScoreAction.ERROR -> 34.dp
-        compact -> 34.dp
-        else -> 38.dp
+        action == SnookerScoreAction.ERROR && compact -> 20.dp
+        action == SnookerScoreAction.ERROR -> 30.dp
+        compact -> 24.dp
+        else -> 34.dp
     }
 
     Button(
@@ -701,7 +798,8 @@ private fun ScoreActionButton(
         colors = ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = contentColor)
     ) {
         if (action == SnookerScoreAction.ERROR) {
-            Icon(imageVector = Icons.Default.Close, contentDescription = "Error", tint = PureWhite)
+            Icon(imageVector = Icons.Default.Close, contentDescription = "Error", tint = PureWhite,
+                modifier = Modifier.size(size * 0.6f))
         }
     }
 }

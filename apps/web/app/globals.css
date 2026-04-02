@@ -560,6 +560,20 @@ textarea {
   min-width: 214px;
 }
 
+.live-center-logo-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.live-center-logo {
+  width: clamp(170px, 22vw, 250px);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
+  opacity: 0.98;
+}
+
 .live-timer-card {
   display: flex;
   align-items: center;
@@ -979,6 +993,10 @@ textarea {
   .live-center-stack {
     min-width: 0;
     width: 100%;
+  }
+
+  .live-center-logo {
+    width: min(240px, 82vw);
   }
 
   .live-timer-card,

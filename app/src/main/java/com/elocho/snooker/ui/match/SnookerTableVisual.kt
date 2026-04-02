@@ -3,15 +3,22 @@ package com.elocho.snooker.ui.match
 import android.graphics.Paint
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.elocho.snooker.R
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -47,6 +54,7 @@ fun SnookerTableVisual(
     ) {
         Box(modifier = Modifier.fillMaxSize().padding(5.dp)) {
             Canvas(modifier = Modifier.fillMaxSize()) {
+                // NOTE: logo overlay is drawn as a Compose Image below the balls (see after Canvas)
                 val w = size.width
                 val h = size.height
                 val ballR = h * 0.030f
@@ -203,6 +211,18 @@ fun SnookerTableVisual(
                     drawRedsLabel("×${state.redsRemaining}", 0.810f, 0.735f, h)
                 }
             }
+
+            // Logo watermark centered on the felt, behind the ball layer visually
+            Image(
+                painter = painterResource(id = R.drawable.elocho_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth(0.50f)
+                    .aspectRatio(648f / 203f)
+                    .align(Alignment.Center),
+                alpha = 0.24f,
+                contentScale = ContentScale.Fit
+            )
         }
     }
 }

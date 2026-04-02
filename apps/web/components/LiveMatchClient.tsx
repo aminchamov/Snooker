@@ -231,6 +231,10 @@ export function LiveMatchClient({ initialLive }: Props) {
               </article>
 
               <div className="live-center-stack">
+                <div className="live-center-logo-wrap">
+                  <img src="/elocho_logo.png" alt="El Ocho" className="live-center-logo" />
+                </div>
+
                 <div className="live-timer-card">
                   <div className="live-timer-main">
                     <TimerIcon />

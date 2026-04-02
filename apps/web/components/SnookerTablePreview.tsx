@@ -95,6 +95,10 @@ export function SnookerTablePreview({ live }: Props) {
   const baulkX = feltLeft + feltWidth * 0.265;
   const dRadius = feltHeight * 0.295;
   const dCy = feltTop + feltHeight * 0.5;
+  const logoWidth = feltWidth * 0.54;
+  const logoHeight = logoWidth * (203 / 648);
+  const logoX = feltLeft + (feltWidth - logoWidth) / 2;
+  const logoY = feltTop + (feltHeight - logoHeight) / 2;
 
   const pocketRadius = inset * 0.9;
   const pocketPositions = [
@@ -162,9 +166,19 @@ export function SnookerTablePreview({ live }: Props) {
             <g key={`pocket-${idx}`}>
               <circle cx={pocket.x} cy={pocket.y} r={pocketRadius} fill="#110a03" />
               <circle cx={pocket.x} cy={pocket.y} r={pocketRadius * 0.68} fill="#060302" />
-              <circle cx={pocket.x} cy={pocket.y} r={pocketRadius} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="2" />
+            <circle cx={pocket.x} cy={pocket.y} r={pocketRadius} fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="2" />
             </g>
           ))}
+
+          <image
+            href="/elocho_logo.png"
+            x={logoX}
+            y={logoY}
+            width={logoWidth}
+            height={logoHeight}
+            preserveAspectRatio="xMidYMid meet"
+            opacity="0.24"
+          />
 
           {balls.map((ball) => (
             <Ball3D key={ball.id} ball={ball} radius={ballRadius} />
