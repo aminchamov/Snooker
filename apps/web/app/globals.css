@@ -662,14 +662,24 @@ textarea {
 /* ── Tournament Bracket ─────────────────────── */
 
 .bracket-scroll {
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   border: 1px solid rgba(200, 166, 90, 0.2);
   border-radius: 14px;
   background: rgba(20, 20, 20, 0.4);
   padding: 0.75rem;
 }
 
+.bracket-center-rail {
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .bracket-afcon {
+  width: max-content;
   min-width: max-content;
   display: flex;
   align-items: center;
@@ -977,6 +987,14 @@ textarea {
     width: 186px;
   }
 
+  .bracket-center-rail {
+    justify-content: flex-start;
+  }
+
+  .bracket-scroll {
+    padding: 0.6rem 0.45rem 0.75rem;
+  }
+
   .page-root {
     padding: 1rem 0 1.5rem;
   }
@@ -1030,6 +1048,42 @@ textarea {
   .player-card .avatar {
     width: 36px;
     height: 36px;
+  }
+
+  .bracket-scroll {
+    padding: 0.45rem 0.3rem 0.65rem;
+  }
+
+  .bracket-afcon {
+    gap: 0.2rem;
+    padding: 0.3rem 0.1rem;
+  }
+
+  .bracket-slot {
+    width: 158px;
+  }
+
+  .bracket-match {
+    width: 144px;
+    height: 68px;
+  }
+
+  .bracket-match.is-final {
+    width: 160px;
+    height: 74px;
+  }
+
+  .bracket-round-label .short {
+    font-size: 0.68rem;
+  }
+
+  .bracket-round-label .long {
+    font-size: 0.58rem;
+  }
+
+  .champion-pill {
+    font-size: 0.68rem;
+    padding: 0.22rem 0.55rem;
   }
 }
 

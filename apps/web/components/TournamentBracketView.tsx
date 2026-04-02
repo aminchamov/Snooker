@@ -186,7 +186,8 @@ export function TournamentBracketView({ tournament, matches, playerNameById }: P
 
   return (
     <div className="bracket-scroll">
-      <div className="bracket-afcon">
+      <div className="bracket-center-rail">
+        <div className="bracket-afcon">
         {leftRounds.map((round, index) => {
           const slotHeight = index === 0 ? UNIT_HEIGHT : UNIT_HEIGHT * 2 ** index;
           return (
@@ -237,6 +238,7 @@ export function TournamentBracketView({ tournament, matches, playerNameById }: P
               </div>
             );
           })}
+        </div>
       </div>
     </div>
   );
