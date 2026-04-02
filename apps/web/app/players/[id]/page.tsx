@@ -21,7 +21,7 @@ export default async function PlayerDetailPage({ params }: Props) {
   const supabase = createPublicSupabaseClient();
 
   const [playerRes, rankingRes, matchesRes, wonTournamentsRes] = await Promise.all([
-    supabase.from("players").select("*").eq("id", playerId).single(),
+    supabase.from("players").select("*").eq("id", playerId).eq("archived", false).single(),
     supabase.from("player_rankings").select("*").eq("player_id", playerId).single(),
     supabase
       .from("matches")

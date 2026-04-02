@@ -9,7 +9,12 @@ export default async function HomePage() {
 
   const [{ data: liveRows }, { data: rankings, error: rankingError }] = await Promise.all([
     supabase.from("live_match_state").select("*").eq("id", "active").limit(1),
-    supabase.from("player_rankings").select("*").order("wins", { ascending: false }).order("max_break", { ascending: false })
+    supabase
+      .from("player_rankings")
+      .select("*")
+      .eq("archived", false)
+      .order("wins", { ascending: false })
+      .order("max_break", { ascending: false })
   ]);
 
   const live = ((liveRows ?? []) as LiveMatchRow[])[0] ?? null;

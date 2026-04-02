@@ -10,6 +10,7 @@ export default async function PlayersPage() {
   const { data: rankings, error: rankingError } = await supabase
     .from("player_rankings")
     .select("*")
+    .eq("archived", false)
     .order("wins", { ascending: false })
     .order("max_break", { ascending: false });
 
