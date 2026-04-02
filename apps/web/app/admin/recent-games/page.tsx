@@ -85,8 +85,8 @@ export default function AdminRecentGamesPage() {
   }, [matchesByDate, selectedMatchDate]);
 
   async function ensureAdmin() {
-    const auth = await browserSupabase.auth.getUser();
-    const user = auth.data.user;
+    const auth = await browserSupabase.auth.getSession();
+    const user = auth.data.session?.user;
     if (!user) {
       router.push("/admin/login");
       return null;
@@ -99,7 +99,6 @@ export default function AdminRecentGamesPage() {
       .single();
 
     if (profileRes.error || !profileRes.data) {
-      await browserSupabase.auth.signOut();
       router.push("/admin/login");
       return null;
     }

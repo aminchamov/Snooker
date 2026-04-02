@@ -204,8 +204,8 @@ export default function AdminDashboardPage() {
   }, [matchesByDate, selectedMatchDate]);
 
   async function ensureAdmin() {
-    const auth = await browserSupabase.auth.getUser();
-    const user = auth.data.user;
+    const auth = await browserSupabase.auth.getSession();
+    const user = auth.data.session?.user;
     if (!user) {
       router.push("/admin/login");
       return null;
@@ -218,7 +218,6 @@ export default function AdminDashboardPage() {
       .single();
 
     if (profileRes.error || !profileRes.data) {
-      await browserSupabase.auth.signOut();
       router.push("/admin/login");
       return null;
     }

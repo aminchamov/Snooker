@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { browserSupabase } from "@/lib/supabase/browserClient";
 
@@ -17,8 +17,41 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [checkingExistingSession, setCheckingExistingSession] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkExistingSession() {
+      const auth = await browserSupabase.auth.getSession();
+      const session = auth.data.session;
+
+      if (!session?.user) {
+        if (isMounted) setCheckingExistingSession(false);
+        return;
+      }
+
+      const profile = await browserSupabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profile.data?.role === "admin") {
+        router.replace("/admin");
+        return;
+      }
+
+      if (isMounted) setCheckingExistingSession(false);
+    }
+
+    void checkExistingSession();
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,7 +85,18 @@ export default function AdminLoginPage() {
     }
 
     setIsLoading(false);
-    router.push("/admin");
+    router.replace("/admin");
+  }
+
+  if (checkingExistingSession) {
+    return (
+      <div className="grid" style={{ gap: "1rem" }}>
+        <section>
+          <h1 className="page-title">Admin Login</h1>
+          <p className="page-subtitle">Checking existing session...</p>
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -91,7 +135,7 @@ export default function AdminLoginPage() {
             <button className="button" type="submit" disabled={isLoading}>
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
-            {error ? <p style={{ color: "#c92a2a" }}>{error}</p> : null}
+            {error ? <p style={{ color: "#d14d4d" }}>{error}</p> : null}
           </form>
         </div>
       </section>
