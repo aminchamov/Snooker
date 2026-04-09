@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatTableSizeLabel } from "@/lib/liveAccessShared";
+import { hasLiveAccess } from "@/lib/liveAccessServer";
 import { createPublicSupabaseClient } from "@/lib/supabase/publicClient";
 import type { LiveMatchRow, TournamentRow } from "@/lib/types";
 
@@ -6,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TournamentsPage() {
   const supabase = createPublicSupabaseClient();
+  const liveUnlocked = await hasLiveAccess();
 
   const [{ data: tournaments }, { data: liveRows }] = await Promise.all([
     supabase.from("tournaments").select("*").order("source_created_at_ms", { ascending: false }),
@@ -22,7 +25,7 @@ export default async function TournamentsPage() {
         <p className="page-subtitle">Public tournament list, statuses, and bracket access.</p>
       </section>
 
-      {live?.is_active ? (
+      {live?.is_active && liveUnlocked ? (
         <section className="panel">
           <div className="panel-header">
             <h2 style={{ margin: 0 }}>Live Tournament Match</h2>
@@ -33,6 +36,23 @@ export default async function TournamentsPage() {
               {live.player1_name ?? "Player 1"} {live.player1_score} - {live.player2_score} {live.player2_name ?? "Player 2"}
               {live.tournament_id ? ` (Tournament #${live.tournament_id})` : ""}
             </p>
+            <p style={{ marginBottom: 0, marginTop: "0.35rem", color: "var(--ink-soft)" }}>
+              Table: {formatTableSizeLabel(live.table_size)}
+            </p>
+          </div>
+        </section>
+      ) : live?.is_active ? (
+        <section className="panel">
+          <div className="panel-header">
+            <h2 style={{ margin: 0 }}>Live Tournament Match</h2>
+          </div>
+          <div className="panel-body">
+            <div className="empty" style={{ margin: 0 }}>
+              A tournament match is live right now, but live views are password protected.
+              <div style={{ marginTop: "0.85rem" }}>
+                <Link href="/live" className="button secondary">Unlock Live Match</Link>
+              </div>
+            </div>
           </div>
         </section>
       ) : null}

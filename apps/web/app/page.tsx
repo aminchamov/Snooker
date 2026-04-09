@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatTableSizeLabel } from "@/lib/liveAccessShared";
+import { hasLiveAccess } from "@/lib/liveAccessServer";
 import { createPublicSupabaseClient } from "@/lib/supabase/publicClient";
 import type { LiveMatchRow, PlayerRankingRow } from "@/lib/types";
 
@@ -6,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const supabase = createPublicSupabaseClient();
+  const liveUnlocked = await hasLiveAccess();
 
   const [{ data: liveRows }, { data: rankings, error: rankingError }] = await Promise.all([
     supabase.from("live_match_state").select("*").eq("id", "active").limit(1),
@@ -43,7 +46,7 @@ export default async function HomePage() {
           {hasLive ? <span className="badge badge-live">Live now</span> : <span className="badge badge-ok">No active game</span>}
         </div>
         <div className="panel-body">
-          {hasLive ? (
+          {hasLive && liveUnlocked ? (
             <Link href="/live" className="home-live-link">
               <div className="home-live-scoreline">
                 <span>{live.player1_name ?? "Player 1"}</span>
@@ -54,9 +57,15 @@ export default async function HomePage() {
                 <span>Queue: {live.queue_count}</span>
                 <span>Timer: {Math.floor(Math.max(0, live.elapsed_seconds) / 60)}m {Math.max(0, live.elapsed_seconds) % 60}s</span>
                 <span>Pts Left: {live.points_left_to_147}</span>
+                <span>Table: {formatTableSizeLabel(live.table_size)}</span>
               </div>
               <span className="home-live-cta">Open Live Scoreboard</span>
             </Link>
+          ) : hasLive ? (
+            <div className="home-live-idle">
+              <p>There is a live match running, but live views are password protected.</p>
+              <Link href="/live" className="button secondary">Unlock Live Match</Link>
+            </div>
           ) : (
             <div className="home-live-idle">
               <p>No live match is running right now.</p>

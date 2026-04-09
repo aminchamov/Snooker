@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { createPublicSupabaseClient } from "@/lib/supabase/publicClient";
+import { TournamentLivePanel } from "@/components/TournamentLivePanel";
 import { TournamentBracketView } from "@/components/TournamentBracketView";
-import type { MatchRow, PlayerRow, TournamentMatchRow, TournamentRow } from "@/lib/types";
+import { hasLiveAccess } from "@/lib/liveAccessServer";
+import type { LiveMatchRow, MatchRow, PlayerRow, TournamentMatchRow, TournamentRow } from "@/lib/types";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -17,10 +19,11 @@ export default async function TournamentDetailPage({ params }: Props) {
   const { id } = await params;
   const tournamentId = Number(id);
   if (Number.isNaN(tournamentId)) notFound();
+  const liveUnlocked = await hasLiveAccess();
 
   const supabase = createPublicSupabaseClient();
 
-  const [tournamentRes, bracketMatchesRes, playersRes, matchesRes] = await Promise.all([
+  const [tournamentRes, bracketMatchesRes, playersRes, matchesRes, liveRes] = await Promise.all([
     supabase.from("tournaments").select("*").eq("id", tournamentId).single(),
     supabase
       .from("tournament_matches")
@@ -29,7 +32,8 @@ export default async function TournamentDetailPage({ params }: Props) {
       .order("round_number", { ascending: true })
       .order("bracket_position", { ascending: true }),
     supabase.from("players").select("*").eq("archived", false),
-    supabase.from("matches").select("*").eq("tournament_id", tournamentId)
+    supabase.from("matches").select("*").eq("tournament_id", tournamentId),
+    supabase.from("live_match_state").select("*").eq("id", "active").limit(1)
   ]);
 
   if (!tournamentRes.data) notFound();
@@ -39,6 +43,7 @@ export default async function TournamentDetailPage({ params }: Props) {
   const playerRows = (playersRes.data ?? []) as PlayerRow[];
   const playerMap = new Map(playerRows.map((p) => [p.id, p.name]));
   const resultRows = ((matchesRes.data ?? []) as MatchRow[]).filter(isTrackableMatch);
+  const liveRow = ((liveRes.data ?? []) as LiveMatchRow[])[0] ?? null;
 
   return (
     <div className="grid" style={{ gap: "1rem" }}>
@@ -74,6 +79,24 @@ export default async function TournamentDetailPage({ params }: Props) {
               </span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <h2 style={{ margin: 0 }}>Live Match</h2>
+        </div>
+        <div className="panel-body">
+          {liveUnlocked ? (
+            <TournamentLivePanel tournamentId={tournamentId} initialLive={liveRow} />
+          ) : (
+            <div className="empty">
+              Live tournament scoreboards are password protected.
+              <div style={{ marginTop: "0.85rem" }}>
+                <a href="/live" className="button secondary">Unlock Live Match</a>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

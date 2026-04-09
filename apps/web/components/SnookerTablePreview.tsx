@@ -1,3 +1,4 @@
+import { formatTableSizeLabel } from "@/lib/liveAccessShared";
 import type { LiveMatchRow } from "@/lib/types";
 
 type Props = {
@@ -112,7 +113,10 @@ export function SnookerTablePreview({ live }: Props) {
 
   return (
     <div className="snooker-table-shell">
-      <h3 className="snooker-table-title">Live Table State</h3>
+      <div className="snooker-table-head">
+        <h3 className="snooker-table-title">Live Table State</h3>
+        <span className="table-size-badge">{formatTableSizeLabel(live.table_size)}</span>
+      </div>
       <div className="snooker-table-wrap">
         <svg viewBox={`0 0 ${TABLE_W} ${TABLE_H}`} className="snooker-table" role="img" aria-label="Snooker table state">
           <defs>
@@ -199,7 +203,7 @@ export function SnookerTablePreview({ live }: Props) {
           ) : null}
         </svg>
       </div>
-      <p className="snooker-table-meta">Reds remaining: {live.reds_remaining}</p>
+      <p className="snooker-table-meta">Reds remaining: {live.reds_remaining} · Table size: {formatTableSizeLabel(live.table_size)}</p>
     </div>
   );
 }

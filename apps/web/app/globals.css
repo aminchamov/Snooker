@@ -460,6 +460,114 @@ textarea {
   padding: 0.85rem;
 }
 
+.snooker-table-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.table-size-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.72rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  background: rgba(121, 27, 47, 0.35);
+  border: 1px solid rgba(200, 166, 90, 0.28);
+}
+
+.live-lock-panel {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.live-lock-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.live-lock-error {
+  margin: 0;
+  color: #ffb4b4;
+  font-size: 0.9rem;
+}
+
+.admin-filter-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.admin-dashboard-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.admin-metric-card,
+.admin-compare-card {
+  border: 1px solid rgba(200, 166, 90, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent),
+    rgba(18, 11, 15, 0.66);
+  padding: 1rem;
+}
+
+.admin-metric-card .label {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-metric-card .sub {
+  display: block;
+  margin-top: 0.32rem;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.admin-metric-value {
+  display: block;
+  margin-top: 0.55rem;
+  font-size: clamp(1.55rem, 2vw, 2.1rem);
+  color: #fff8eb;
+  line-height: 1;
+}
+
+.admin-compare-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.admin-compare-card h3 {
+  margin: 0 0 0.7rem;
+  color: var(--gold-soft);
+  font-size: 1rem;
+}
+
+.admin-compare-card p {
+  margin: 0.28rem 0;
+  color: var(--ink);
+}
+
+.admin-growth {
+  color: var(--gold-soft);
+  font-weight: 700;
+}
+
 .snooker-table-title {
   margin: 0 0 0.55rem;
   color: var(--gold-soft);

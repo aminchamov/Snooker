@@ -54,6 +54,7 @@ export type MatchRow = {
   match_highest_break: number;
   break_history_summary: string | null;
   match_type: string;
+  table_size?: string | null;
   tournament_id: number | null;
   tournament_round: number | null;
   source_created_at_ms: number;
@@ -102,6 +103,7 @@ export type LiveMatchRow = {
   elapsed_seconds: number;
   queue_count: number;
   points_left_to_147: number;
+  table_size?: string | null;
   source_updated_at_ms: number;
 };
 

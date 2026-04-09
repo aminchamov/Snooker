@@ -3,6 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { formatTableSizeLabel, normalizeTableSize } from "@/lib/liveAccessShared";
 import { browserSupabase } from "@/lib/supabase/browserClient";
 import type { MatchRow, PlayerRow, ProfileRow, TournamentMatchRow, TournamentRow } from "@/lib/types";
 
@@ -44,6 +45,68 @@ type MatchDateGroup = {
   matches: MatchRow[];
 };
 
+type AdminPeriodPreset =
+  | "last_7_days"
+  | "last_30_days"
+  | "last_90_days"
+  | "this_month"
+  | "specific_date"
+  | "date_range"
+  | "specific_month"
+  | "year_to_date"
+  | "full_year";
+
+type AdminPeriodRange = {
+  currentStart: number;
+  currentEnd: number;
+  compareStart: number;
+  compareEnd: number;
+  periodLabel: string;
+  compareLabel: string;
+};
+
+type AdminDashboardMetrics = {
+  totalRevenue: number;
+  totalGames: number;
+  totalPlayers: number;
+  activePlayers: number;
+  compareRevenue: number;
+  compareGames: number;
+  revenueGrowthPercent: number;
+  gamesGrowthPercent: number;
+  periodLabel: string;
+  compareLabel: string;
+  games10ft: number;
+  games12ft: number;
+};
+
+const ADMIN_PERIOD_OPTIONS: Array<{ value: AdminPeriodPreset; label: string }> = [
+  { value: "last_7_days", label: "Last 7 Days" },
+  { value: "last_30_days", label: "Last 30 Days" },
+  { value: "last_90_days", label: "Last 90 Days" },
+  { value: "this_month", label: "This Month" },
+  { value: "specific_date", label: "Specific Date" },
+  { value: "date_range", label: "Date Interval" },
+  { value: "specific_month", label: "Specific Month" },
+  { value: "year_to_date", label: "Year To Date" },
+  { value: "full_year", label: "Whole Year" }
+];
+
+const MONTH_OPTIONS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+] as const;
+
 function isTrackableMatch(match: MatchRow): boolean {
   return !(match.player1_score === 0 && match.player2_score === 0);
 }
@@ -72,6 +135,237 @@ function formatDuration(durationSeconds: number): string {
   const minutes = Math.floor(total / 60);
   const seconds = total % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+function startOfDayLocal(ms: number): number {
+  const date = new Date(ms);
+  date.setHours(0, 0, 0, 0);
+  return date.getTime();
+}
+
+function endOfDayLocal(ms: number): number {
+  const date = new Date(ms);
+  date.setHours(23, 59, 59, 999);
+  return date.getTime();
+}
+
+function formatDateInput(ms: number): string {
+  return toDateKeyLocal(ms);
+}
+
+function parseDateInput(value: string): number | null {
+  if (!value) return null;
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.getTime();
+}
+
+function previousWindow(currentStart: number, currentEnd: number): { start: number; end: number } {
+  const windowSize = Math.max(1, currentEnd - currentStart + 1);
+  return {
+    start: currentStart - windowSize,
+    end: currentStart - 1
+  };
+}
+
+function formatMoney(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+function formatPercent(value: number): string {
+  const rounded = Number.isFinite(value) ? value : 0;
+  const sign = rounded > 0 ? "+" : "";
+  return `${sign}${rounded.toFixed(1)}%`;
+}
+
+function computeGrowth(current: number, previous: number): number {
+  if (previous <= 0) return current > 0 ? 100 : 0;
+  return ((current - previous) / previous) * 100;
+}
+
+function computeAdminPeriodRange(
+  period: AdminPeriodPreset,
+  specificDate: string,
+  rangeStart: string,
+  rangeEnd: string,
+  monthSelection: number,
+  yearSelection: number,
+  nowMs: number = Date.now()
+): AdminPeriodRange {
+  const now = new Date(nowMs);
+  const todayStart = startOfDayLocal(nowMs);
+  const todayEnd = endOfDayLocal(nowMs);
+
+  if (period === "last_7_days") {
+    const currentStart = startOfDayLocal(todayStart - 6 * 24 * 60 * 60 * 1000);
+    const currentEnd = todayEnd;
+    const previous = previousWindow(currentStart, currentEnd);
+    return { currentStart, currentEnd, compareStart: previous.start, compareEnd: previous.end, periodLabel: "Last 7 Days", compareLabel: "Previous 7 Days" };
+  }
+
+  if (period === "last_30_days") {
+    const currentStart = startOfDayLocal(todayStart - 29 * 24 * 60 * 60 * 1000);
+    const currentEnd = todayEnd;
+    const previous = previousWindow(currentStart, currentEnd);
+    return { currentStart, currentEnd, compareStart: previous.start, compareEnd: previous.end, periodLabel: "Last 30 Days", compareLabel: "Previous 30 Days" };
+  }
+
+  if (period === "last_90_days") {
+    const currentStart = startOfDayLocal(todayStart - 89 * 24 * 60 * 60 * 1000);
+    const currentEnd = todayEnd;
+    const previous = previousWindow(currentStart, currentEnd);
+    return { currentStart, currentEnd, compareStart: previous.start, compareEnd: previous.end, periodLabel: "Last 90 Days", compareLabel: "Previous 90 Days" };
+  }
+
+  if (period === "this_month") {
+    const currentStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const currentEnd = todayEnd;
+    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+    const prevMonthEnd = endOfDayLocal(new Date(now.getFullYear(), now.getMonth(), 0).getTime());
+    return { currentStart, currentEnd, compareStart: prevMonthStart, compareEnd: prevMonthEnd, periodLabel: "This Month", compareLabel: "Previous Month" };
+  }
+
+  if (period === "specific_date") {
+    const day = parseDateInput(specificDate) ?? todayStart;
+    const currentStart = startOfDayLocal(day);
+    const currentEnd = endOfDayLocal(day);
+    const compareDay = startOfDayLocal(day - 24 * 60 * 60 * 1000);
+    return {
+      currentStart,
+      currentEnd,
+      compareStart: compareDay,
+      compareEnd: endOfDayLocal(compareDay),
+      periodLabel: formatDateInput(day),
+      compareLabel: formatDateInput(compareDay)
+    };
+  }
+
+  if (period === "date_range") {
+    const parsedStart = parseDateInput(rangeStart) ?? todayStart;
+    const parsedEnd = parseDateInput(rangeEnd) ?? parsedStart;
+    const currentStart = startOfDayLocal(Math.min(parsedStart, parsedEnd));
+    const currentEnd = endOfDayLocal(Math.max(parsedStart, parsedEnd));
+    const previous = previousWindow(currentStart, currentEnd);
+    return {
+      currentStart,
+      currentEnd,
+      compareStart: previous.start,
+      compareEnd: previous.end,
+      periodLabel: `${formatDateInput(currentStart)} to ${formatDateInput(currentEnd)}`,
+      compareLabel: `${formatDateInput(previous.start)} to ${formatDateInput(previous.end)}`
+    };
+  }
+
+  if (period === "specific_month") {
+    const safeMonth = Math.min(12, Math.max(1, monthSelection));
+    const currentStart = new Date(yearSelection, safeMonth - 1, 1).getTime();
+    const currentEnd = endOfDayLocal(new Date(yearSelection, safeMonth, 0).getTime());
+    const compareDate = new Date(yearSelection, safeMonth - 2, 1);
+    const compareStart = compareDate.getTime();
+    const compareEnd = endOfDayLocal(new Date(compareDate.getFullYear(), compareDate.getMonth() + 1, 0).getTime());
+    return {
+      currentStart,
+      currentEnd,
+      compareStart,
+      compareEnd,
+      periodLabel: `${MONTH_OPTIONS[safeMonth - 1]} ${yearSelection}`,
+      compareLabel: `${MONTH_OPTIONS[compareDate.getMonth()]} ${compareDate.getFullYear()}`
+    };
+  }
+
+  if (period === "year_to_date") {
+    const currentStart = new Date(yearSelection, 0, 1).getTime();
+    const currentEnd = yearSelection === now.getFullYear() ? todayEnd : endOfDayLocal(new Date(yearSelection, 11, 31).getTime());
+    const compareStart = new Date(yearSelection - 1, 0, 1).getTime();
+    const compareEnd = yearSelection === now.getFullYear()
+      ? endOfDayLocal(new Date(yearSelection - 1, now.getMonth(), now.getDate()).getTime())
+      : endOfDayLocal(new Date(yearSelection - 1, 11, 31).getTime());
+    return {
+      currentStart,
+      currentEnd,
+      compareStart,
+      compareEnd,
+      periodLabel: `Year To Date ${yearSelection}`,
+      compareLabel: `Year To Date ${yearSelection - 1}`
+    };
+  }
+
+  const currentStart = new Date(yearSelection, 0, 1).getTime();
+  const currentEnd = endOfDayLocal(new Date(yearSelection, 11, 31).getTime());
+  const compareStart = new Date(yearSelection - 1, 0, 1).getTime();
+  const compareEnd = endOfDayLocal(new Date(yearSelection - 1, 11, 31).getTime());
+  return {
+    currentStart,
+    currentEnd,
+    compareStart,
+    compareEnd,
+    periodLabel: `Full Year ${yearSelection}`,
+    compareLabel: `Full Year ${yearSelection - 1}`
+  };
+}
+
+function computeAdminDashboardMetrics(params: {
+  matches: MatchRow[];
+  totalPlayers: number;
+  tableSizeFilter: "all" | "10ft" | "12ft";
+  period: AdminPeriodPreset;
+  specificDate: string;
+  rangeStart: string;
+  rangeEnd: string;
+  monthSelection: number;
+  yearSelection: number;
+  fee10: number;
+  fee12: number;
+}): AdminDashboardMetrics {
+  const {
+    matches,
+    totalPlayers,
+    tableSizeFilter,
+    period,
+    specificDate,
+    rangeStart,
+    rangeEnd,
+    monthSelection,
+    yearSelection,
+    fee10,
+    fee12
+  } = params;
+
+  const range = computeAdminPeriodRange(period, specificDate, rangeStart, rangeEnd, monthSelection, yearSelection);
+  const filteredRows = matches.filter((match) => {
+    const normalizedSize = normalizeTableSize(match.table_size);
+    if (tableSizeFilter !== "all" && normalizedSize !== tableSizeFilter) return false;
+    return true;
+  });
+
+  const currentRows = filteredRows.filter((match) => match.started_at_ms >= range.currentStart && match.started_at_ms <= range.currentEnd);
+  const compareRows = filteredRows.filter((match) => match.started_at_ms >= range.compareStart && match.started_at_ms <= range.compareEnd);
+  const getRevenue = (match: MatchRow) => normalizeTableSize(match.table_size) === "10ft" ? fee10 : fee12;
+  const activePlayers = new Set(
+    currentRows.flatMap((match) => [match.player1_id, match.player2_id]).filter((value): value is number => Number.isFinite(value))
+  ).size;
+
+  return {
+    totalRevenue: currentRows.reduce((sum, match) => sum + getRevenue(match), 0),
+    totalGames: currentRows.length,
+    totalPlayers,
+    activePlayers,
+    compareRevenue: compareRows.reduce((sum, match) => sum + getRevenue(match), 0),
+    compareGames: compareRows.length,
+    revenueGrowthPercent: computeGrowth(
+      currentRows.reduce((sum, match) => sum + getRevenue(match), 0),
+      compareRows.reduce((sum, match) => sum + getRevenue(match), 0)
+    ),
+    gamesGrowthPercent: computeGrowth(currentRows.length, compareRows.length),
+    periodLabel: range.periodLabel,
+    compareLabel: range.compareLabel,
+    games10ft: currentRows.filter((match) => normalizeTableSize(match.table_size) === "10ft").length,
+    games12ft: currentRows.filter((match) => normalizeTableSize(match.table_size) === "12ft").length
+  };
 }
 
 type TournamentMatchInsert = {
@@ -154,6 +448,15 @@ export default function AdminDashboardPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [selectedMatchDate, setSelectedMatchDate] = useState<string>("");
+  const [dashboardPeriod, setDashboardPeriod] = useState<AdminPeriodPreset>("last_30_days");
+  const [dashboardSpecificDate, setDashboardSpecificDate] = useState<string>(() => formatDateInput(Date.now()));
+  const [dashboardRangeStart, setDashboardRangeStart] = useState<string>(() => formatDateInput(Date.now() - 6 * 24 * 60 * 60 * 1000));
+  const [dashboardRangeEnd, setDashboardRangeEnd] = useState<string>(() => formatDateInput(Date.now()));
+  const [dashboardMonth, setDashboardMonth] = useState<number>(() => new Date().getMonth() + 1);
+  const [dashboardYear, setDashboardYear] = useState<number>(() => new Date().getFullYear());
+  const [dashboardTableSize, setDashboardTableSize] = useState<"all" | "10ft" | "12ft">("all");
+  const [fee10Text, setFee10Text] = useState("100");
+  const [fee12Text, setFee12Text] = useState("140");
 
   const [playerForm, setPlayerForm] = useState({ id: "", name: "", image_uri: "" });
   const [tournamentForm, setTournamentForm] = useState({ id: "", name: "", player_count: "2", total_rounds: "1", status: "in_progress" });
@@ -202,6 +505,31 @@ export default function AdminDashboardPage() {
     if (!selectedMatchDate) return matchesByDate[0] ?? null;
     return matchesByDate.find((group) => group.date === selectedMatchDate) ?? null;
   }, [matchesByDate, selectedMatchDate]);
+  const fee10 = useMemo(() => {
+    const parsed = Number(fee10Text);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 100;
+  }, [fee10Text]);
+  const fee12 = useMemo(() => {
+    const parsed = Number(fee12Text);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 140;
+  }, [fee12Text]);
+  const dashboardMetrics = useMemo(
+    () =>
+      computeAdminDashboardMetrics({
+        matches,
+        totalPlayers: players.filter((player) => !player.archived).length,
+        tableSizeFilter: dashboardTableSize,
+        period: dashboardPeriod,
+        specificDate: dashboardSpecificDate,
+        rangeStart: dashboardRangeStart,
+        rangeEnd: dashboardRangeEnd,
+        monthSelection: dashboardMonth,
+        yearSelection: dashboardYear,
+        fee10,
+        fee12
+      }),
+    [matches, players, dashboardTableSize, dashboardPeriod, dashboardSpecificDate, dashboardRangeStart, dashboardRangeEnd, dashboardMonth, dashboardYear, fee10, fee12]
+  );
 
   async function ensureAdmin() {
     const auth = await browserSupabase.auth.getSession();
@@ -570,6 +898,122 @@ export default function AdminDashboardPage() {
       </section>
 
       <section className="panel">
+        <div className="panel-header">
+          <h2 style={{ margin: 0 }}>Admin Dashboard</h2>
+        </div>
+        <div className="panel-body">
+          <div className="admin-filter-grid">
+            <div className="form-row" style={{ marginBottom: 0 }}>
+              <label>Period</label>
+              <select className="input" value={dashboardPeriod} onChange={(e) => setDashboardPeriod(e.target.value as AdminPeriodPreset)}>
+                {ADMIN_PERIOD_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-row" style={{ marginBottom: 0 }}>
+              <label>Table Size</label>
+              <select className="input" value={dashboardTableSize} onChange={(e) => setDashboardTableSize(e.target.value as "all" | "10ft" | "12ft")}>
+                <option value="all">All</option>
+                <option value="10ft">10 FT</option>
+                <option value="12ft">12 FT</option>
+              </select>
+            </div>
+            <div className="form-row" style={{ marginBottom: 0 }}>
+              <label>10ft Fee / Game</label>
+              <input className="input" inputMode="numeric" value={fee10Text} onChange={(e) => setFee10Text(e.target.value)} />
+            </div>
+            <div className="form-row" style={{ marginBottom: 0 }}>
+              <label>12ft Fee / Game</label>
+              <input className="input" inputMode="numeric" value={fee12Text} onChange={(e) => setFee12Text(e.target.value)} />
+            </div>
+
+            {dashboardPeriod === "specific_date" ? (
+              <div className="form-row" style={{ marginBottom: 0 }}>
+                <label>Date</label>
+                <input className="input" type="date" value={dashboardSpecificDate} onChange={(e) => setDashboardSpecificDate(e.target.value)} />
+              </div>
+            ) : null}
+
+            {dashboardPeriod === "date_range" ? (
+              <>
+                <div className="form-row" style={{ marginBottom: 0 }}>
+                  <label>Start</label>
+                  <input className="input" type="date" value={dashboardRangeStart} onChange={(e) => setDashboardRangeStart(e.target.value)} />
+                </div>
+                <div className="form-row" style={{ marginBottom: 0 }}>
+                  <label>End</label>
+                  <input className="input" type="date" value={dashboardRangeEnd} onChange={(e) => setDashboardRangeEnd(e.target.value)} />
+                </div>
+              </>
+            ) : null}
+
+            {dashboardPeriod === "specific_month" ? (
+              <>
+                <div className="form-row" style={{ marginBottom: 0 }}>
+                  <label>Month</label>
+                  <select className="input" value={dashboardMonth} onChange={(e) => setDashboardMonth(Number(e.target.value))}>
+                    {MONTH_OPTIONS.map((month, index) => (
+                      <option key={month} value={index + 1}>{month}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-row" style={{ marginBottom: 0 }}>
+                  <label>Year</label>
+                  <input className="input" inputMode="numeric" value={dashboardYear} onChange={(e) => setDashboardYear(Number(e.target.value) || new Date().getFullYear())} />
+                </div>
+              </>
+            ) : null}
+
+            {dashboardPeriod === "year_to_date" || dashboardPeriod === "full_year" ? (
+              <div className="form-row" style={{ marginBottom: 0 }}>
+                <label>Year</label>
+                <input className="input" inputMode="numeric" value={dashboardYear} onChange={(e) => setDashboardYear(Number(e.target.value) || new Date().getFullYear())} />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="admin-dashboard-grid">
+            <article className="admin-metric-card">
+              <span className="label">Total Revenue</span>
+              <strong className="admin-metric-value">{formatMoney(dashboardMetrics.totalRevenue)}</strong>
+              <span className="sub">{dashboardMetrics.periodLabel}</span>
+            </article>
+            <article className="admin-metric-card">
+              <span className="label">Total Games</span>
+              <strong className="admin-metric-value">{dashboardMetrics.totalGames}</strong>
+              <span className="sub">10ft: {dashboardMetrics.games10ft} · 12ft: {dashboardMetrics.games12ft}</span>
+            </article>
+            <article className="admin-metric-card">
+              <span className="label">Total Players</span>
+              <strong className="admin-metric-value">{dashboardMetrics.totalPlayers}</strong>
+              <span className="sub">{dashboardMetrics.activePlayers} active in selected period</span>
+            </article>
+            <article className="admin-metric-card">
+              <span className="label">Growth Rate</span>
+              <strong className="admin-metric-value">{formatPercent(dashboardMetrics.revenueGrowthPercent)}</strong>
+              <span className="sub">Revenue vs {dashboardMetrics.compareLabel}</span>
+            </article>
+          </div>
+
+          <div className="admin-compare-grid">
+            <article className="admin-compare-card">
+              <h3>Revenue Comparison</h3>
+              <p>{dashboardMetrics.periodLabel}: <strong>{formatMoney(dashboardMetrics.totalRevenue)}</strong></p>
+              <p>{dashboardMetrics.compareLabel}: <strong>{formatMoney(dashboardMetrics.compareRevenue)}</strong></p>
+              <p className="admin-growth">Change: {formatPercent(dashboardMetrics.revenueGrowthPercent)}</p>
+            </article>
+            <article className="admin-compare-card">
+              <h3>Games Comparison</h3>
+              <p>{dashboardMetrics.periodLabel}: <strong>{dashboardMetrics.totalGames}</strong></p>
+              <p>{dashboardMetrics.compareLabel}: <strong>{dashboardMetrics.compareGames}</strong></p>
+              <p className="admin-growth">Change: {formatPercent(dashboardMetrics.gamesGrowthPercent)}</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
         <div className="panel-body" style={{ paddingTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <Link className="button secondary" href="/admin/recent-games">Recent Games Page</Link>
           <button className="button" onClick={exportAll}>Export All JSON</button>
@@ -821,6 +1265,7 @@ export default function AdminDashboardPage() {
                   <th>Date</th>
                   <th>Start</th>
                   <th>End</th>
+                  <th>Table</th>
                   <th>Player 1</th>
                   <th>Score</th>
                   <th>Player 2</th>
@@ -841,6 +1286,7 @@ export default function AdminDashboardPage() {
                       <td>{toDateKeyLocal(match.started_at_ms)}</td>
                       <td>{formatClock(match.started_at_ms)}</td>
                       <td>{formatClock(matchEndMs(match))}</td>
+                      <td>{formatTableSizeLabel(match.table_size)}</td>
                       <td>{playerNameById.get(match.player1_id) ?? `#${match.player1_id}`}</td>
                       <td>{match.player1_score} - {match.player2_score}</td>
                       <td>{playerNameById.get(match.player2_id) ?? `#${match.player2_id}`}</td>
@@ -886,6 +1332,7 @@ export default function AdminDashboardPage() {
                       <tr>
                         <th>Start</th>
                         <th>End</th>
+                        <th>Table</th>
                         <th>Player 1</th>
                         <th>Score</th>
                         <th>Player 2</th>
@@ -904,6 +1351,7 @@ export default function AdminDashboardPage() {
                           <tr key={`daily-${selectedDateGroup.date}-${match.id}`}>
                             <td>{formatClock(match.started_at_ms)}</td>
                             <td>{formatClock(matchEndMs(match))}</td>
+                            <td>{formatTableSizeLabel(match.table_size)}</td>
                             <td>{playerNameById.get(match.player1_id) ?? `#${match.player1_id}`}</td>
                             <td>{match.player1_score} - {match.player2_score}</td>
                             <td>{playerNameById.get(match.player2_id) ?? `#${match.player2_id}`}</td>

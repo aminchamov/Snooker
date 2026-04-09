@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { formatTableSizeLabel, normalizeTableSize } from "@/lib/liveAccessShared";
 import { browserSupabase } from "@/lib/supabase/browserClient";
 import { SnookerTablePreview } from "@/components/SnookerTablePreview";
 import type { LiveMatchRow } from "@/lib/types";
@@ -81,6 +82,7 @@ function normalizeLiveRow(value: unknown): LiveMatchRow | null {
     elapsed_seconds: readNumber(row.elapsed_seconds, 0),
     queue_count: readNumber(row.queue_count, 0),
     points_left_to_147: clampPointsLeft(readNumber(row.points_left_to_147, fallbackPointsLeft)),
+    table_size: normalizeTableSize(row.table_size),
     source_updated_at_ms: readNumber(row.source_updated_at_ms, Date.now())
   };
 }
@@ -201,7 +203,7 @@ export function LiveMatchClient({ initialLive }: Props) {
     <div className="grid" style={{ gap: "1rem" }}>
       <section>
         <h1 className="page-title">Live Match Scoreboard</h1>
-        <p className="page-subtitle">Public live scoreboard powered by Supabase sync. {statusNote}</p>
+        <p className="page-subtitle">Password-protected live scoreboard powered by Supabase sync. {statusNote}</p>
       </section>
 
       {!live || !live.is_active ? (
@@ -246,6 +248,10 @@ export function LiveMatchClient({ initialLive }: Props) {
                   </div>
                 </div>
 
+                <div className="live-mini-card">
+                  <span className="label">TABLE</span>
+                  <span className="value">{formatTableSizeLabel(live.table_size)}</span>
+                </div>
                 <div className="live-mini-card">
                   <span className="label">PTS LEFT</span>
                   <span className="value">{live.points_left_to_147}</span>
@@ -304,6 +310,8 @@ export function LiveMatchClient({ initialLive }: Props) {
               <dd>{formatElapsed(live.elapsed_seconds)}</dd>
               <dt>Queue</dt>
               <dd>{live.queue_count}</dd>
+              <dt>Table</dt>
+              <dd>{formatTableSizeLabel(live.table_size)}</dd>
               <dt>Reds remaining</dt>
               <dd>{live.reds_remaining}</dd>
               <dt>Highest break (match)</dt>
